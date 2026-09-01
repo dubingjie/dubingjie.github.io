@@ -1,0 +1,116 @@
+/* ===== 自定义样式 ===== */
+
+/* --- 字体分工：标题用衬线体（Noto Serif SC），正文用黑体，代码用等宽 --- */
+.post-title,
+article h1, article h2, article h3, article h4, article h5,
+.l_left .logo-wrap .title .main,
+h1.text.title {
+  font-family: "Noto Serif SC", "Songti SC", "SimSun", serif;
+}
+.post-title,
+h1.text.title {
+  font-weight: 700;
+}
+
+/* --- 标题层级强化：六级标题大小区分明显 --- */
+article h1 {
+  font-size: 1.9em;
+  font-weight: 700;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--block-border);
+}
+article h2 {
+  font-size: 1.55em;
+  font-weight: 700;
+  margin-top: 1.6em;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--block-border);
+}
+article h3 {
+  font-size: 1.3em;
+  font-weight: 700;
+  margin-top: 1.4em;
+}
+article h4 {
+  font-size: 1.15em;
+  font-weight: 700;
+  color: var(--text-p1);
+}
+article h5 {
+  font-size: 1.05em;
+  font-weight: 600;
+  color: var(--text-p2);
+}
+article h6 {
+  font-size: 1em;
+  font-weight: 600;
+  color: var(--text-p3);
+  font-family: "Noto Serif SC", "Songti SC", "SimSun", serif;
+}
+
+/* --- 全局背景色：米白 --- */
+:root {
+  --background: #f7f2eb;
+}
+
+/* --- 隐藏顶部“近期发布”导航条 --- */
+.navbar.top {
+  display: none;
+}
+
+/* --- 文章页：侧栏只留返回箭头 + 目录，其余全部隐藏 --- */
+.l_body[layout="post"] .l_left .logo-wrap,
+.l_body[layout="post"] .l_left .search-wrapper,
+.l_body[layout="post"] .l_left nav.menu,
+.l_body[layout="post"] .l_left .widget-wrapper.recent {
+  display: none;
+}
+
+/* --- 文章页：目录美化（选择器覆盖整个目录组件，兼容跳级标题产生的游离条目） --- */
+.l_body[layout="post"] .widget-wrapper.toc .widget-header .name {
+  font-size: 15px;
+  font-weight: 600;
+}
+.l_body[layout="post"] .widget-wrapper.toc a.toc-link {
+  font-size: 15px;
+  line-height: 1.5;
+  padding: 8px 12px;
+  margin: 2px 8px;
+  color: var(--text-p2) !important;
+  display: block;
+}
+/* 深层级目录克制缩进，防止文字被挤出侧栏；隐藏序号标记（文章标题自带序号） */
+.l_body[layout="post"] .widget-wrapper.toc ol {
+  padding-left: 12px;
+  list-style: none;
+}
+.l_body[layout="post"] .widget-wrapper.toc .toc-level-3 a.toc-link,
+.l_body[layout="post"] .widget-wrapper.toc .toc-level-4 a.toc-link,
+.l_body[layout="post"] .widget-wrapper.toc .toc-level-5 a.toc-link,
+.l_body[layout="post"] .widget-wrapper.toc .toc-level-6 a.toc-link {
+  font-size: 13.5px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+.l_body[layout="post"] .widget-wrapper.toc a.toc-link:hover {
+  background: var(--block-border);
+  color: var(--text) !important;
+}
+/* 当前章节：黑色加粗 + 左侧主题色竖线（不用蓝色，避免误以为是链接状态） */
+.l_body[layout="post"] .widget-wrapper.toc a.toc-link.active {
+  color: var(--text) !important;
+  font-weight: 700;
+}
+
+/* --- 文章页：返回箭头放大 --- */
+.l_body[layout="post"] .l_left .widget-wrapper.markdown .widget-body {
+  font-size: 28px;
+  line-height: 1;
+  padding-top: 8px;
+}
+.l_body[layout="post"] .l_left .widget-wrapper.markdown .widget-body p {
+  margin: 0;
+}
+.l_body[layout="post"] .l_left .widget-wrapper.markdown a {
+  text-decoration: none;
+}
