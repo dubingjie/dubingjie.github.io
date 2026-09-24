@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gitee 双重认证与 VPN、代理的区别 · LinX的世界</title>
+  <meta name="description" content="记录 Gitee 双重认证中遇到的问题，并比较代理与 VPN 的工作方式、作用范围、协议及使用场景。">
+  <link rel="canonical" href="https://dubingjie.github.io/2026/09/17/gitee-2fa-vpn-proxy/">
+  <meta property="og:title" content="Gitee 双重认证与 VPN、代理的区别 · LinX的世界">
+  <meta property="og:description" content="记录 Gitee 双重认证中遇到的问题，并比较代理与 VPN 的工作方式、作用范围、协议及使用场景。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dubingjie.github.io/2026/09/17/gitee-2fa-vpn-proxy/">
+  <meta property="og:site_name" content="LinX的世界">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  
+<link rel="stylesheet" href="/css/aerlume.css">
+
+  <style>@font-face{font-family:'Aerlume Local';src:url('/fonts/TsangerYuYangT_W03_W03.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}:root{--aerlume-local-font:'Aerlume Local'}</style>
+  
+<link rel="stylesheet" href="/css/linx.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="reading-page">
+<a class="skip-link" href="#main-content">跳到正文</a>
+
+  <main class="reading-shell" id="main-content">
+<div class="reading-tools">
+  <a class="reading-back" data-reading-back href="/"><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18"/></svg><span>返回</span></a>
+</div>
+<div class="article-reading-layout has-toc">
+  
+  <details class="reading-toc" id="reading-toc" open>
+    <summary><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="toc-open-label">目录</span><span class="toc-hide-label">隐藏 ←</span><span class="toc-show-label">目录 →</span></summary>
+    <nav class="reading-toc-panel" aria-label="文章目录"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#9%E6%9C%8817%E6%97%A5"><span class="toc-text">9月17日</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-text">一、遇到的问题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E3%80%901%E3%80%91gitee-2FA-%E8%AE%A4%E8%AF%81%EF%BC%81"><span class="toc-text">【1】gitee 2FA 认证！</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E3%80%902%E3%80%91VPN-%E5%92%8C%E4%BB%A3%E7%90%86"><span class="toc-text">【2】VPN 和代理</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%A0%B8%E5%BF%83%E5%8C%BA%E5%88%AB"><span class="toc-text">一、核心区别</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E4%BB%A3%E7%90%86%EF%BC%88Proxy%EF%BC%89"><span class="toc-text">二、代理（Proxy）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%89%E3%80%81VPN"><span class="toc-text">三、VPN</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E6%AF%94%E5%96%BB%E7%90%86%E8%A7%A3"><span class="toc-text">四、比喻理解</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF%E9%80%89%E6%8B%A9"><span class="toc-text">五、使用场景选择</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E4%B8%80%E5%8F%A5%E8%AF%9D%E6%80%BB%E7%BB%93"><span class="toc-text">六、一句话总结</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E6%98%93%E6%B7%B7%E6%B7%86%E7%82%B9%E6%8F%90%E9%86%92"><span class="toc-text">七、易混淆点提醒</span></a></li></ol></li></ol></li></ol></li></ol></nav>
+  </details>
+  
+<article class="post-container">
+  <header class="article-header">
+    <a class="article-category" href="/topics/#network">Linux 与网络</a>
+    <h1 class="post-title">Gitee 双重认证与 VPN、代理的区别</h1>
+    <div class="post-meta"><time datetime="2026-09-17T00:00:00.000Z">2026-09-17</time><span aria-hidden="true"> / </span><a href="/tags/%E4%BB%A3%E7%90%86/">代理</a><span aria-hidden="true"> · </span><a href="/tags/Gitee/">Gitee</a><span aria-hidden="true"> · </span><a href="/tags/2FA/">2FA</a><span aria-hidden="true"> · </span><a href="/tags/VPN/">VPN</a></div>
+    <p class="article-description">记录 Gitee 双重认证中遇到的问题，并比较代理与 VPN 的工作方式、作用范围、协议及使用场景。</p>
+  </header>
+  <div class="post-content"><h1 id="9月17日"><a href="#9月17日" class="headerlink" title="9月17日"></a>9月17日</h1><h2 id="一、遇到的问题"><a href="#一、遇到的问题" class="headerlink" title="一、遇到的问题"></a>一、遇到的问题</h2><h3 id="【1】gitee-2FA-认证！"><a href="#【1】gitee-2FA-认证！" class="headerlink" title="【1】gitee 2FA 认证！"></a>【1】gitee 2FA 认证！</h3><p>需要用到私人令牌才能登录进去！！</p>
+<h3 id="【2】VPN-和代理"><a href="#【2】VPN-和代理" class="headerlink" title="【2】VPN 和代理"></a>【2】VPN 和代理</h3><h4 id="一、核心区别"><a href="#一、核心区别" class="headerlink" title="一、核心区别"></a>一、核心区别</h4><table>
+<thead>
+<tr>
+<th align="left">对比项</th>
+<th align="left">代理（Proxy）</th>
+<th align="left">VPN</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>工作层级</strong></td>
+<td align="left">应用层为主</td>
+<td align="left">网络层&#x2F;系统层</td>
+</tr>
+<tr>
+<td align="left"><strong>影响范围</strong></td>
+<td align="left">只影响设置了代理的软件</td>
+<td align="left">整台设备所有流量</td>
+</tr>
+<tr>
+<td align="left"><strong>加密</strong></td>
+<td align="left">通常不加密，或只加密到代理服务器</td>
+<td align="left">全程加密（客户端到 VPN 服务器）</td>
+</tr>
+<tr>
+<td align="left"><strong>主要目的</strong></td>
+<td align="left">隐藏 IP、绕过限制、缓存加速</td>
+<td align="left">加密通信、远程接入内网、隐藏 IP</td>
+</tr>
+<tr>
+<td align="left"><strong>典型协议</strong></td>
+<td align="left">HTTP、HTTPS、SOCKS5</td>
+<td align="left">OpenVPN、WireGuard、IPsec、L2TP</td>
+</tr>
+<tr>
+<td align="left"><strong>速度</strong></td>
+<td align="left">通常较快（不做加密）</td>
+<td align="left">略慢（需加解密）</td>
+</tr>
+<tr>
+<td align="left"><strong>配置位置</strong></td>
+<td align="left">浏览器&#x2F;软件里填代理地址</td>
+<td align="left">系统网络设置里建连接</td>
+</tr>
+</tbody></table>
+<h4 id="二、代理（Proxy）"><a href="#二、代理（Proxy）" class="headerlink" title="二、代理（Proxy）"></a>二、代理（Proxy）</h4><p><strong>工作原理：</strong></p>
+<ol>
+<li>软件把请求发给代理服务器</li>
+<li>代理服务器替你去访问目标网站</li>
+<li>目标网站看到的是代理服务器的 IP</li>
+<li>代理把结果返回给你</li>
+</ol>
+<p><strong>特点：</strong></p>
+<ul>
+<li>只代理指定软件，其他软件仍直连</li>
+<li>默认不加密<ul>
+<li>HTTP 代理：能看到明文内容</li>
+<li>HTTPS 代理：只能看到域名，看不到具体内容</li>
+</ul>
+</li>
+<li>常见类型：<ul>
+<li>HTTP&#x2F;HTTPS 代理：主要给浏览器用</li>
+<li>SOCKS5 代理：更通用，能代理各种流量，但不加密</li>
+<li>反向代理：用在服务器端</li>
+</ul>
+</li>
+</ul>
+<h4 id="三、VPN"><a href="#三、VPN" class="headerlink" title="三、VPN"></a>三、VPN</h4><p><strong>工作原理：</strong></p>
+<ol>
+<li>设备与 VPN 服务器建立加密隧道</li>
+<li>所有网络流量都走这条隧道</li>
+<li>出口是 VPN 服务器的 IP</li>
+<li>中间人只能看到你连了 VPN，看不到具体内容</li>
+</ol>
+<p><strong>特点：</strong></p>
+<ul>
+<li>全局生效，整台设备流量都走 VPN</li>
+<li>全程加密（设备到 VPN 服务器）</li>
+<li>常见用途：<ul>
+<li>远程接入公司内网（企业 VPN）</li>
+<li>公共 Wi-Fi 上保护隐私</li>
+<li>跨地区访问</li>
+</ul>
+</li>
+</ul>
+<h4 id="四、比喻理解"><a href="#四、比喻理解" class="headerlink" title="四、比喻理解"></a>四、比喻理解</h4><ul>
+<li><strong>代理</strong>：找朋友代收快递。朋友替你去拿，商家看到的是朋友地址。但朋友拿到后怎么给你、路上会不会被看到，取决于交接方式。</li>
+<li><strong>VPN</strong>：你和家之间修了一条专用加密隧道。所有东西都从隧道走，外面的人看不到里面运的是什么。</li>
+</ul>
+<h4 id="五、使用场景选择"><a href="#五、使用场景选择" class="headerlink" title="五、使用场景选择"></a>五、使用场景选择</h4><table>
+<thead>
+<tr>
+<th align="left">需求</th>
+<th align="left">选择</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">只想让浏览器换 IP</td>
+<td align="left">代理</td>
+</tr>
+<tr>
+<td align="left">整台电脑所有流量加密&#x2F;换 IP</td>
+<td align="left">VPN</td>
+</tr>
+<tr>
+<td align="left">远程连公司内网</td>
+<td align="left">企业 VPN</td>
+</tr>
+<tr>
+<td align="left">公共 Wi-Fi 保护隐私</td>
+<td align="left">VPN</td>
+</tr>
+<tr>
+<td align="left">某些软件不支持代理设置</td>
+<td align="left">VPN 或系统级代理工具</td>
+</tr>
+</tbody></table>
+<h4 id="六、一句话总结"><a href="#六、一句话总结" class="headerlink" title="六、一句话总结"></a>六、一句话总结</h4><blockquote>
+<p><strong>代理是“按软件转发”，VPN 是“整机加密隧道”。</strong><br>代理轻量但不加密、范围小；VPN 全局、加密，但稍重。两者用途不同，不是谁替代谁。</p>
+</blockquote>
+<h4 id="七、易混淆点提醒"><a href="#七、易混淆点提醒" class="headerlink" title="七、易混淆点提醒"></a>七、易混淆点提醒</h4><ol>
+<li><strong>代理 ≠ 加密</strong>：普通代理不加密，别把它当隐私工具。</li>
+<li><strong>VPN ≠ 翻墙专用</strong>：企业远程接入才是 VPN 的本职。</li>
+<li><strong>虚拟机网络模式 ≠ VPN&#x2F;代理</strong>：<ul>
+<li>NAT&#x2F;桥接决定虚拟机怎么接入网络</li>
+<li>VPN&#x2F;代理决定流量怎么转发和加密</li>
+</ul>
+</li>
+<li><strong>远程桌面走不走代理&#x2F;VPN</strong>：取决于代理是否覆盖该软件，VPN 则默认全局覆盖。</li>
+</ol>
+</div>
+  <nav class="article-end" aria-label="继续阅读"><a href="/topics/">浏览学习专题 <span aria-hidden="true">↗</span></a><a href="#main-content">回到顶部 ↑</a></nav>
+</article>
+
+</div>
+</main>
+
+<footer class="footer linx-footer">
+  <span>记录学习的过程，也记录慢慢想明白的事。</span>
+  <span><a href="https://github.com/dubingjie" target="_blank" rel="noopener noreferrer">GitHub</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://github.com/wu3227834/hexo-theme-aerlume">Aerlume</a></span>
+</footer>
+
+
+<script src="/js/linx.js" defer data-root="/" data-search="/search.json"></script>
+
+<script src="/js/clipboard.js" defer></script>
+<script src="/js/lightbox.js" defer></script>
+
+</body>
+</html>

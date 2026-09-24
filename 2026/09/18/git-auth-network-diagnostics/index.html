@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Git 推送认证与网络排查：ping、DNS 和 CDN · LinX的世界</title>
+  <meta name="description" content="记录开启双重认证后的 Git 推送问题，区分 ping 与 nslookup 的用途，并梳理 DNS 解析和 CDN 的关系。">
+  <link rel="canonical" href="https://dubingjie.github.io/2026/09/18/git-auth-network-diagnostics/">
+  <meta property="og:title" content="Git 推送认证与网络排查：ping、DNS 和 CDN · LinX的世界">
+  <meta property="og:description" content="记录开启双重认证后的 Git 推送问题，区分 ping 与 nslookup 的用途，并梳理 DNS 解析和 CDN 的关系。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dubingjie.github.io/2026/09/18/git-auth-network-diagnostics/">
+  <meta property="og:site_name" content="LinX的世界">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  
+<link rel="stylesheet" href="/css/aerlume.css">
+
+  <style>@font-face{font-family:'Aerlume Local';src:url('/fonts/TsangerYuYangT_W03_W03.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}:root{--aerlume-local-font:'Aerlume Local'}</style>
+  
+<link rel="stylesheet" href="/css/linx.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="reading-page">
+<a class="skip-link" href="#main-content">跳到正文</a>
+
+  <main class="reading-shell" id="main-content">
+<div class="reading-tools">
+  <a class="reading-back" data-reading-back href="/"><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18"/></svg><span>返回</span></a>
+</div>
+<div class="article-reading-layout has-toc">
+  
+  <details class="reading-toc" id="reading-toc" open>
+    <summary><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="toc-open-label">目录</span><span class="toc-hide-label">隐藏 ←</span><span class="toc-show-label">目录 →</span></summary>
+    <nav class="reading-toc-panel" aria-label="文章目录"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#9%E6%9C%8818%E6%97%A5-%E7%AC%94%E8%AE%B0"><span class="toc-text">9月18日 笔记</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E3%80%901%E3%80%91git-%E6%8E%A8%E9%80%81"><span class="toc-text">【1】git 推送</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E3%80%902%E3%80%91%E7%BD%91%E7%BB%9C%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7"><span class="toc-text">【2】网络诊断工具</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1%E3%80%81ping"><span class="toc-text">1、ping</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2%E3%80%81nslookup-exe"><span class="toc-text">2、nslookup.exe</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3%E3%80%81%E4%BB%80%E4%B9%88%E5%9C%BA%E6%99%AF%E4%B8%8B%E7%94%A8%EF%BC%9F"><span class="toc-text">3、什么场景下用？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4%E3%80%81%E7%BD%91%E7%BB%9C%E6%8E%92%E6%9F%A5%E6%80%9D%E8%B7%AF"><span class="toc-text">4、网络排查思路</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5%E3%80%81%E9%98%BF%E9%87%8C%E7%9A%84-DNS"><span class="toc-text">5、阿里的 DNS</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4%E3%80%81CDN-%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="toc-text">4、CDN 是什么？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-CDN-%E5%92%8C-DNS-%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="toc-text">5.CDN 和 DNS 的关系</span></a></li></ol></li></ol></li></ol></nav>
+  </details>
+  
+<article class="post-container">
+  <header class="article-header">
+    <a class="article-category" href="/topics/#network">Linux 与网络</a>
+    <h1 class="post-title">Git 推送认证与网络排查：ping、DNS 和 CDN</h1>
+    <div class="post-meta"><time datetime="2026-09-18T00:00:00.000Z">2026-09-18</time><span aria-hidden="true"> / </span><a href="/tags/Git/">Git</a><span aria-hidden="true"> · </span><a href="/tags/Gitee/">Gitee</a><span aria-hidden="true"> · </span><a href="/tags/ping/">ping</a><span aria-hidden="true"> · </span><a href="/tags/DNS/">DNS</a><span aria-hidden="true"> · </span><a href="/tags/CDN/">CDN</a></div>
+    <p class="article-description">记录开启双重认证后的 Git 推送问题，区分 ping 与 nslookup 的用途，并梳理 DNS 解析和 CDN 的关系。</p>
+  </header>
+  <div class="post-content"><h1 id="9月18日-笔记"><a href="#9月18日-笔记" class="headerlink" title="9月18日 笔记"></a>9月18日 笔记</h1><p>（嗯，额，呃）</p>
+<h2 id="【1】git-推送"><a href="#【1】git-推送" class="headerlink" title="【1】git 推送"></a>【1】git 推送</h2><p>第一次把项目推送到远程仓库，需要先执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git push -u origin main</span><br></pre></td></tr></table></figure>
+
+
+
+<p>gitee 账号开启了 2FA 认证，所以推送代码会被拒绝，需要用私人令牌来验证身份。</p>
+<p>直接把令牌写进远程地址：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git remote set-url origin https://dubingjie88:你的令牌@gitee.com/dubingjie88/java-web-test.git</span><br></pre></td></tr></table></figure>
+
+
+
+<p>如果还是推送不成功，可能是因为代理干扰。</p>
+<p>查看是否配置了代理：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git config --global --get http.proxy</span><br><span class="line">git config --global --get https.proxy</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="【2】网络诊断工具"><a href="#【2】网络诊断工具" class="headerlink" title="【2】网络诊断工具"></a>【2】网络诊断工具</h2><h3 id="1、ping"><a href="#1、ping" class="headerlink" title="1、ping"></a>1、ping</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ping qq.com</span><br></pre></td></tr></table></figure>
+
+<p><strong>作用：</strong></p>
+<p>测试本机到目标主机的网络是否连通，以及延迟和丢包情况。</p>
+<p><strong>执行过程：</strong></p>
+<ol>
+<li>你的电脑先通过系统配置的 DNS 服务器，把 <code>qq.com</code> 解析成 IP 地址（比如 <code>123.151.137.18</code>）。</li>
+<li>然后向这个 IP 发送 <strong>ICMP Echo Request</strong>（回显请求）数据包。</li>
+<li>对方如果允许 ICMP，就回一个 <strong>ICMP Echo Reply</strong>（回显应答）。</li>
+<li>你看到的是往返时间（RTT，如 <code>time=25ms</code>）和丢包率。</li>
+</ol>
+<p>它测的是：<strong>网络层（IP&#x2F;ICMP）的连通性和质量</strong>。</p>
+<p>注意：很多服务器&#x2F;防火墙会禁用 ICMP，所以 <code>ping</code> 不通不代表网站打不开。</p>
+<h3 id="2、nslookup-exe"><a href="#2、nslookup-exe" class="headerlink" title="2、nslookup.exe"></a>2、nslookup.exe</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nslookup qq.com <span class="number">1.1</span>.<span class="number">1.1</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>作用：</strong></p>
+<p>指定用 <code>1.1.1.1</code> 这台 DNS 服务器来解析 <code>qq.com</code>，看它返回什么 IP。</p>
+<p><strong>拆解：</strong></p>
+<ul>
+<li><code>nslookup</code>：查询 DNS 记录的工具。</li>
+<li><code>qq.com</code>：要查询的域名。</li>
+<li><code>1.1.1.1</code>：指定使用的 DNS 服务器（Cloudflare 的公共 DNS）。</li>
+</ul>
+<p>它测的是：<strong>DNS 解析层面</strong>——这个特定的 DNS 服务器能不能解析、解析成什么 IP、响应快不快。</p>
+<p><code>1.1.1.1</code> 是 Cloudflare 的公共 DNS，特点是全球任播、速度快、隐私政策好，在国外&#x2F;国际线路场景常用。</p>
+<p>补充：<code>119.29.29.29</code> 是 <strong>腾讯 DNSPod 的公共 DNS</strong>（也叫 DNSPod Public DNS+）</p>
+<p><strong>对比：</strong></p>
+<table>
+<thead>
+<tr>
+<th align="left">维度</th>
+<th align="left"><code>ping qq.com</code></th>
+<th align="left"><code>nslookup qq.com 1.1.1.1</code></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">工作层次</td>
+<td align="left">网络层（ICMP）</td>
+<td align="left">应用层（DNS 查询）</td>
+</tr>
+<tr>
+<td align="left">是否解析域名</td>
+<td align="left">会，用系统默认 DNS</td>
+<td align="left">会，用指定的 1.1.1.1</td>
+</tr>
+<tr>
+<td align="left">测什么</td>
+<td align="left">连通性、延迟、丢包</td>
+<td align="left">DNS 解析结果和速度</td>
+</tr>
+<tr>
+<td align="left">输出内容</td>
+<td align="left">IP + 往返时间 + 丢包</td>
+<td align="left">域名对应的 IP 列表</td>
+</tr>
+<tr>
+<td align="left">能否判断网站可访问</td>
+<td align="left">不能（ICMP 可能被封）</td>
+<td align="left">不能（只查 DNS）</td>
+</tr>
+</tbody></table>
+<ul>
+<li><code>ping</code> 关心的是”能不能通、快不快”。</li>
+<li><code>nslookup</code> 关心的是”域名被解析成哪个 IP”。</li>
+</ul>
+<h3 id="3、什么场景下用？"><a href="#3、什么场景下用？" class="headerlink" title="3、什么场景下用？"></a>3、什么场景下用？</h3><p><strong>用 <code>ping</code>：</strong></p>
+<ul>
+<li>网站打不开，想先看网络通不通。</li>
+<li>测延迟、丢包，判断线路质量。</li>
+<li>确认某台服务器是否在线。</li>
+</ul>
+<p><strong>用 <code>nslookup ... 1.1.1.1</code>：</strong></p>
+<ul>
+<li>怀疑本地 DNS 被污染或解析错误，用国外公共 DNS 对比。</li>
+<li>排查 DNS 污染、CDN 调度问题。</li>
+<li>想验证某个域名在 Cloudflare DNS 下解析成什么。</li>
+</ul>
+<h3 id="4、网络排查思路"><a href="#4、网络排查思路" class="headerlink" title="4、网络排查思路"></a>4、网络排查思路</h3><p>网站打不开时，可以这样串起来用：</p>
+<ol>
+<li><code>nslookup qq.com 1.1.1.1</code> → 看解析出的 IP 是否正常。</li>
+<li><code>nslookup qq.com 119.29.29.29</code> → 对比另一个 DNS 的结果，判断是否被污染或调度异常。</li>
+<li><code>ping &lt;解析出的IP&gt;</code> → 看这个 IP 通不通、延迟多少。</li>
+<li>如果 <code>ping</code> 不通但网页能开，说明只是 ICMP 被封，不代表故障。</li>
+</ol>
+<h3 id="5、阿里的-DNS"><a href="#5、阿里的-DNS" class="headerlink" title="5、阿里的 DNS"></a>5、阿里的 DNS</h3><p>首选 <code>223.5.5.5</code>，备用 <code>223.6.6.6</code></p>
+<h3 id="4、CDN-是什么？"><a href="#4、CDN-是什么？" class="headerlink" title="4、CDN 是什么？"></a>4、CDN 是什么？</h3><p><strong>CDN &#x3D; Content Delivery Network，内容分发网络。</strong></p>
+<p>把内容提前复制到离用户近的多个节点上，让用户就近获取，从而加速访问。</p>
+<h3 id="5-CDN-和-DNS-的关系"><a href="#5-CDN-和-DNS-的关系" class="headerlink" title="5.CDN 和 DNS 的关系"></a>5.CDN 和 DNS 的关系</h3><ul>
+<li><code>nslookup qq.com 1.1.1.1</code> 返回 3 个 IP。</li>
+<li>这 3 个 IP 很可能就是<strong>不同地区的 CDN 节点</strong>，或同一调度体系下的多个入口。</li>
+<li>**DNS 负责”指路”**：根据你的位置，把你导向最近的 CDN 节点。</li>
+<li>**CDN 负责”供货”**：节点上缓存着内容，直接发给你。</li>
+</ul>
+</div>
+  <nav class="article-end" aria-label="继续阅读"><a href="/topics/">浏览学习专题 <span aria-hidden="true">↗</span></a><a href="#main-content">回到顶部 ↑</a></nav>
+</article>
+
+</div>
+</main>
+
+<footer class="footer linx-footer">
+  <span>记录学习的过程，也记录慢慢想明白的事。</span>
+  <span><a href="https://github.com/dubingjie" target="_blank" rel="noopener noreferrer">GitHub</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://github.com/wu3227834/hexo-theme-aerlume">Aerlume</a></span>
+</footer>
+
+
+<script src="/js/linx.js" defer data-root="/" data-search="/search.json"></script>
+
+<script src="/js/clipboard.js" defer></script>
+<script src="/js/lightbox.js" defer></script>
+
+</body>
+</html>

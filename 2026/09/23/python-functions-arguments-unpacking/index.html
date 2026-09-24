@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Python 函数与参数传递：变量引用、推导式与解包 · LinX的世界</title>
+  <meta name="description" content="从变量引用和函数对象出发，整理嵌套列表推导式的执行顺序，以及星号解包、args 和 kwargs 的参数接收机制。">
+  <link rel="canonical" href="https://dubingjie.github.io/2026/09/23/python-functions-arguments-unpacking/">
+  <meta property="og:title" content="Python 函数与参数传递：变量引用、推导式与解包 · LinX的世界">
+  <meta property="og:description" content="从变量引用和函数对象出发，整理嵌套列表推导式的执行顺序，以及星号解包、args 和 kwargs 的参数接收机制。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dubingjie.github.io/2026/09/23/python-functions-arguments-unpacking/">
+  <meta property="og:site_name" content="LinX的世界">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  
+<link rel="stylesheet" href="/css/aerlume.css">
+
+  <style>@font-face{font-family:'Aerlume Local';src:url('/fonts/TsangerYuYangT_W03_W03.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}:root{--aerlume-local-font:'Aerlume Local'}</style>
+  
+<link rel="stylesheet" href="/css/linx.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="reading-page">
+<a class="skip-link" href="#main-content">跳到正文</a>
+
+  <main class="reading-shell" id="main-content">
+<div class="reading-tools">
+  <a class="reading-back" data-reading-back href="/"><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18"/></svg><span>返回</span></a>
+</div>
+<div class="article-reading-layout has-toc">
+  
+  <details class="reading-toc" id="reading-toc" open>
+    <summary><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="toc-open-label">目录</span><span class="toc-hide-label">隐藏 ←</span><span class="toc-show-label">目录 →</span></summary>
+    <nav class="reading-toc-panel" aria-label="文章目录"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Python-%E6%A0%B8%E5%BF%83%E7%9F%A5%E8%AF%86%E7%82%B9%E6%80%BB%E7%BB%93%EF%BC%9A%E5%8F%98%E9%87%8F%E3%80%81%E5%87%BD%E6%95%B0%E4%B8%8E%E5%8F%82%E6%95%B0%E4%BC%A0%E9%80%92"><span class="toc-text">Python 核心知识点总结：变量、函数与参数传递</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81-%E5%8F%98%E9%87%8F%E4%B8%8E%E5%86%85%E5%AD%98%E7%9A%84%E6%9C%AC%E8%B4%A8%EF%BC%88%E2%80%9C%E6%A0%87%E7%AD%BE%E4%B8%8E%E6%88%BF%E9%97%B4%E2%80%9D%E6%A8%A1%E5%9E%8B%EF%BC%89"><span class="toc-text">一、 变量与内存的本质（“标签与房间”模型）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81-%E5%87%BD%E6%95%B0%E7%9A%84%E6%9C%AC%E8%B4%A8%E4%B8%8E%E5%86%85%E5%AD%98%E6%9C%BA%E5%88%B6"><span class="toc-text">二、 函数的本质与内存机制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81-%E5%88%97%E8%A1%A8%E6%8E%A8%E5%AF%BC%E5%BC%8F%E4%B8%8E%E5%B5%8C%E5%A5%97%E8%BF%98%E5%8E%9F"><span class="toc-text">三、 列表推导式与嵌套还原</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%9F%BA%E7%A1%80%E7%BB%93%E6%9E%84"><span class="toc-text">1. 基础结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%B5%8C%E5%A5%97%E6%8E%A8%E5%AF%BC%E5%BC%8F%E7%9A%84%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F"><span class="toc-text">2. 嵌套推导式的执行顺序</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81-%E5%87%BD%E6%95%B0%E5%8F%82%E6%95%B0%E4%BC%A0%E9%80%92-args-%E5%92%8C-kwargs"><span class="toc-text">四、 函数参数传递 (*args 和 **kwargs)</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E6%98%9F%E5%8F%B7-%E5%9C%A8%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E4%B8%AD%E7%9A%84%E4%BD%9C%E7%94%A8%EF%BC%88%E8%A7%A3%E5%8C%85%EF%BC%89"><span class="toc-text">1. 星号 * 在函数调用中的作用（解包）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-args-%E5%92%8C-kwargs-%E7%9A%84%E6%8E%A5%E6%94%B6%E6%9C%BA%E5%88%B6"><span class="toc-text">2. *args 和 **kwargs 的接收机制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E7%BB%8F%E5%85%B8%E6%A1%88%E4%BE%8B%E5%88%86%E6%9E%90"><span class="toc-text">3. 经典案例分析</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81-%E6%80%BB%E7%BB%93%E4%B8%8E%E9%81%BF%E5%9D%91%E6%8C%87%E5%8D%97"><span class="toc-text">五、 总结与避坑指南</span></a></li></ol></li></ol></nav>
+  </details>
+  
+<article class="post-container">
+  <header class="article-header">
+    <a class="article-category" href="/topics/#python">Python</a>
+    <h1 class="post-title">Python 函数与参数传递：变量引用、推导式与解包</h1>
+    <div class="post-meta"><time datetime="2026-09-23T00:00:00.000Z">2026-09-23</time><span aria-hidden="true"> / </span><a href="/tags/Python/">Python</a><span aria-hidden="true"> · </span><a href="/tags/%E5%87%BD%E6%95%B0/">函数</a><span aria-hidden="true"> · </span><a href="/tags/%E5%8F%82%E6%95%B0%E4%BC%A0%E9%80%92/">参数传递</a><span aria-hidden="true"> · </span><a href="/tags/%E6%8E%A8%E5%AF%BC%E5%BC%8F/">推导式</a><span aria-hidden="true"> · </span><a href="/tags/%E8%A7%A3%E5%8C%85/">解包</a></div>
+    <p class="article-description">从变量引用和函数对象出发，整理嵌套列表推导式的执行顺序，以及星号解包、args 和 kwargs 的参数接收机制。</p>
+  </header>
+  <div class="post-content"><h1 id="Python-核心知识点总结：变量、函数与参数传递"><a href="#Python-核心知识点总结：变量、函数与参数传递" class="headerlink" title="Python 核心知识点总结：变量、函数与参数传递"></a>Python 核心知识点总结：变量、函数与参数传递</h1><p>基于我们之前的讨论，这里将 Python 中关于变量本质、函数机制、列表推导式以及函数参数传递的核心知识点整理成一份系统的 Markdown 文档，方便你复习和查阅。</p>
+<hr>
+<h2 id="一、-变量与内存的本质（“标签与房间”模型）"><a href="#一、-变量与内存的本质（“标签与房间”模型）" class="headerlink" title="一、 变量与内存的本质（“标签与房间”模型）"></a>一、 变量与内存的本质（“标签与房间”模型）</h2><p>理解 Python 变量的关键在于区分<strong>变量名</strong>和<strong>内存地址</strong>。</p>
+<ul>
+<li><strong>内存（房间）</strong>：计算机中真正存储数据的地方。</li>
+<li><strong>内存地址（房间编号）</strong>：每个内存空间都有唯一的编号（可以使用 <code>id()</code> 查看）。</li>
+<li><strong>变量名（标签）</strong>：变量名本身不存储数据，它仅仅是贴在“房间门”上的一个标签。它指向了内存地址。</li>
+<li><strong>变量值（房间里的内容）</strong>：实际存储在内存中的数据。</li>
+</ul>
+<p><strong>核心结论</strong>：<br>在 Python 中，<strong>一切皆对象</strong>。函数、列表、数字、字符串都是对象。赋值操作（<code>=</code>）的本质，就是把“标签”贴在“房间”上。</p>
+<hr>
+<h2 id="二、-函数的本质与内存机制"><a href="#二、-函数的本质与内存机制" class="headerlink" title="二、 函数的本质与内存机制"></a>二、 函数的本质与内存机制</h2><p>结合“标签与房间”模型，函数在 Python 中的运作方式如下：</p>
+<ol>
+<li>**定义函数 (<code>def func():</code>)**：<ul>
+<li>Python 会在内存中开辟一块专属的“房间”。</li>
+<li>这个房间里装的不是普通数据，而是<strong>一段可执行的代码块</strong>（函数体）。</li>
+<li>函数名 <code>func</code> 就是贴在门口的第一张标签。</li>
+</ul>
+</li>
+<li>**函数别名 (<code>foo = func</code>)**：<ul>
+<li>这<strong>不是</strong>复制代码。它只是拿了一张新标签 <code>foo</code>，贴在了同一个房间的门上。</li>
+<li>此时，<code>func</code> 和 <code>foo</code> 指向完全相同的内存地址。执行 <code>foo()</code> 和 <code>func()</code> 效果完全一致。</li>
+</ul>
+</li>
+<li>**调用函数 (<code>func()</code>)**：<ul>
+<li><strong>加括号 <code>()</code></strong> 是“执行”的标志。</li>
+<li>它的含义是：顺着标签找到内存地址（房间），取出里面的代码块并自动运行。</li>
+<li>不加括号（如 <code>foo = func</code>）传递的是“房间号（标签）”；加括号（如 <code>foo = func()</code>）传递的是“房间里代码运行后的结果”。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="三、-列表推导式与嵌套还原"><a href="#三、-列表推导式与嵌套还原" class="headerlink" title="三、 列表推导式与嵌套还原"></a>三、 列表推导式与嵌套还原</h2><p>列表推导式（List Comprehension）是 Python 中非常优雅的语法，但多层嵌套容易让人晕头转向。</p>
+<h3 id="1-基础结构"><a href="#1-基础结构" class="headerlink" title="1. 基础结构"></a>1. 基础结构</h3><p><code>[表达式 for 变量 in 可迭代对象 if 条件]</code></p>
+<h3 id="2-嵌套推导式的执行顺序"><a href="#2-嵌套推导式的执行顺序" class="headerlink" title="2. 嵌套推导式的执行顺序"></a>2. 嵌套推导式的执行顺序</h3><p>原式：<code>[变量 for 变量 in [变量 for 变量 in 可迭代类型] if 表达式]</code></p>
+<p><strong>还原原则</strong>：<strong>从内到外，先执行内层，将内层的结果作为外层的数据源。</strong></p>
+<p><strong>还原为普通 <code>for</code> 循环的步骤</strong>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 第一步：先执行内层推导式，生成一个临时列表</span></span><br><span class="line">临时列表 = []</span><br><span class="line"><span class="keyword">for</span> 变量 <span class="keyword">in</span> 可迭代类型:</span><br><span class="line">    临时列表.append(变量)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 第二步：执行外层推导式和条件判断</span></span><br><span class="line">最终结果 = []</span><br><span class="line"><span class="keyword">for</span> 变量 <span class="keyword">in</span> 临时列表:   <span class="comment"># 遍历内层生成的结果</span></span><br><span class="line">    <span class="keyword">if</span> 表达式:          <span class="comment"># 对应 if 条件</span></span><br><span class="line">        最终结果.append(变量)</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="四、-函数参数传递-args-和-kwargs"><a href="#四、-函数参数传递-args-和-kwargs" class="headerlink" title="四、 函数参数传递 (*args 和 **kwargs)"></a>四、 函数参数传递 (<code>*args</code> 和 <code>**kwargs</code>)</h2><p>在 Python 中，函数定义时的参数顺序有严格规定：**位置参数 -&gt; 默认参数 -&gt; <code>*args</code> -&gt; <code>**kwargs</code>**。</p>
+<h3 id="1-星号-在函数调用中的作用（解包）"><a href="#1-星号-在函数调用中的作用（解包）" class="headerlink" title="1. 星号 * 在函数调用中的作用（解包）"></a>1. 星号 <code>*</code> 在函数调用中的作用（解包）</h3><p>在调用函数时，<code>*</code> 被称为<strong>解包操作符</strong>。</p>
+<ul>
+<li>如果 <code>num_list = [1, 2, 3]</code>：<ul>
+<li><code>print(num_list)</code> 输出 <code>[1, 2, 3]</code>（打印整个列表对象）。</li>
+<li><code>print(*num_list)</code> 输出 <code>1 2 3</code>（把列表拆开，等同于 <code>print(1, 2, 3)</code>，默认用空格分隔）。</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-args-和-kwargs-的接收机制"><a href="#2-args-和-kwargs-的接收机制" class="headerlink" title="2. *args 和 **kwargs 的接收机制"></a>2. <code>*args</code> 和 <code>**kwargs</code> 的接收机制</h3><ul>
+<li><strong><code>*args</code> (可变位置参数)<strong>：收集所有</strong>多余的、未匹配的“位置参数”</strong>，并将它们打包成一个**元组 (Tuple)**。</li>
+<li><strong><code>**kwargs</code> (可变关键字参数)<strong>：收集所有</strong>多余的、未匹配的“关键字参数”</strong>，并将它们打包成一个**字典 (Dictionary)**。</li>
+</ul>
+<h3 id="3-经典案例分析"><a href="#3-经典案例分析" class="headerlink" title="3. 经典案例分析"></a>3. 经典案例分析</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">add</span>(<span class="params">x, y, *args, **kwargs</span>):</span><br><span class="line">    <span class="built_in">print</span>(x, y)</span><br><span class="line">    <span class="built_in">print</span>(args)</span><br><span class="line">    <span class="built_in">print</span>(kwargs)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 调用 1：全部使用关键字参数</span></span><br><span class="line">add(x=<span class="number">1</span>, y=<span class="number">2</span>, z=<span class="number">3</span>, u=<span class="number">5</span>)</span><br><span class="line"><span class="comment"># 输出：</span></span><br><span class="line"><span class="comment"># 1 2</span></span><br><span class="line"><span class="comment"># ()           &lt;-- 没有多余的位置参数，args 为空元组</span></span><br><span class="line"><span class="comment"># &#123;&#x27;z&#x27;: 3, &#x27;u&#x27;: 5&#125; &lt;-- z 和 u 被 kwargs 收集为字典</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 调用 2：混合使用位置和关键字参数</span></span><br><span class="line">add(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, z=<span class="number">5</span>)</span><br><span class="line"><span class="comment"># 输出：</span></span><br><span class="line"><span class="comment"># 1 2</span></span><br><span class="line"><span class="comment"># (3, 4)       &lt;-- 多余的位置参数 3, 4 被 args 收集为元组</span></span><br><span class="line"><span class="comment"># &#123;&#x27;z&#x27;: 5&#125;     &lt;-- 关键字参数 z=5 被 kwargs 收集为字典</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="五、-总结与避坑指南"><a href="#五、-总结与避坑指南" class="headerlink" title="五、 总结与避坑指南"></a>五、 总结与避坑指南</h2><ol>
+<li><strong>传参避坑</strong>：在调用函数时，传递的是函数名（标签）还是函数调用结果（<code>函数名()</code>），有着本质区别。前者传递的是功能，后者传递的是返回值（如果没有 <code>return</code> 则为 <code>None</code>）。</li>
+<li><strong>内存回收</strong>：当一个对象（房间）没有任何标签（变量名）指向它时，Python 的垃圾回收机制就会把这个房间清理掉。</li>
+<li><strong>参数顺序</strong>：定义函数时，务必遵循 <code>普通参数 -&gt; *args -&gt; 默认参数 -&gt; **kwargs</code> 的顺序（注：默认参数通常放在 <code>*args</code> 之前，但如果默认参数在 <code>*args</code> 之后，则调用时必须使用关键字传参，否则容易报错。严格来说推荐：<code>位置参数, 默认参数, *args, **kwargs</code>）。</li>
+</ol>
+</div>
+  <nav class="article-end" aria-label="继续阅读"><a href="/topics/">浏览学习专题 <span aria-hidden="true">↗</span></a><a href="#main-content">回到顶部 ↑</a></nav>
+</article>
+
+</div>
+</main>
+
+<footer class="footer linx-footer">
+  <span>记录学习的过程，也记录慢慢想明白的事。</span>
+  <span><a href="https://github.com/dubingjie" target="_blank" rel="noopener noreferrer">GitHub</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://github.com/wu3227834/hexo-theme-aerlume">Aerlume</a></span>
+</footer>
+
+
+<script src="/js/linx.js" defer data-root="/" data-search="/search.json"></script>
+
+<script src="/js/clipboard.js" defer></script>
+<script src="/js/lightbox.js" defer></script>
+
+</body>
+</html>

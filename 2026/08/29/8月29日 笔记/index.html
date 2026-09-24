@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Git 协作与 systemd 服务管理实践 · LinX的世界</title>
+  <meta name="description" content="记录仓库克隆、忽略规则和 Git 协作中的问题，以及 systemd 服务管理的实践。">
+  <link rel="canonical" href="https://dubingjie.github.io/2026/08/29/8%E6%9C%8829%E6%97%A5%20%E7%AC%94%E8%AE%B0/">
+  <meta property="og:title" content="Git 协作与 systemd 服务管理实践 · LinX的世界">
+  <meta property="og:description" content="记录仓库克隆、忽略规则和 Git 协作中的问题，以及 systemd 服务管理的实践。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dubingjie.github.io/2026/08/29/8%E6%9C%8829%E6%97%A5%20%E7%AC%94%E8%AE%B0/">
+  <meta property="og:site_name" content="LinX的世界">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  
+<link rel="stylesheet" href="/css/aerlume.css">
+
+  <style>@font-face{font-family:'Aerlume Local';src:url('/fonts/TsangerYuYangT_W03_W03.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}:root{--aerlume-local-font:'Aerlume Local'}</style>
+  
+<link rel="stylesheet" href="/css/linx.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="reading-page">
+<a class="skip-link" href="#main-content">跳到正文</a>
+
+  <main class="reading-shell" id="main-content">
+<div class="reading-tools">
+  <a class="reading-back" data-reading-back href="/"><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18"/></svg><span>返回</span></a>
+</div>
+<div class="article-reading-layout has-toc">
+  
+  <details class="reading-toc" id="reading-toc" open>
+    <summary><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="toc-open-label">目录</span><span class="toc-hide-label">隐藏 ←</span><span class="toc-show-label">目录 →</span></summary>
+    <nav class="reading-toc-panel" aria-label="文章目录"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-text">一、遇到的问题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E3%80%901%E3%80%91%E4%BB%8E-GitHub-%E4%B8%8A%E6%8B%89%E5%8F%96%E6%BA%90%E4%BB%A3%E7%A0%81"><span class="toc-text">【1】从 GitHub 上拉取源代码</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E7%94%A8-HTTPS-%E7%9B%B4%E6%8E%A5%E5%85%8B%E9%9A%86%EF%BC%9A"><span class="toc-text">1、用 HTTPS 直接克隆：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E7%94%A8-SSH-%E6%96%B9%E5%BC%8F%EF%BC%9A"><span class="toc-text">2、用 SSH 方式：</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E3%80%902%E3%80%91%E4%BE%9D%E8%B5%96%E5%AE%89%E8%A3%85"><span class="toc-text">【2】依赖安装</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E3%80%903%E3%80%91%E6%94%B9%E7%AB%AF%E5%8F%A3"><span class="toc-text">【3】改端口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E3%80%904%E3%80%91systemd-%E6%9C%8D%E5%8A%A1"><span class="toc-text">【4】systemd 服务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E3%80%905%E3%80%91%E6%A1%A5%E6%8E%A5-%E5%92%8C-NAT-%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="toc-text">【5】桥接 和 NAT 的区别</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81NAT-%E6%A8%A1%E5%BC%8F%EF%BC%88%E9%BB%98%E8%AE%A4%EF%BC%89%EF%BC%9A"><span class="toc-text">1、NAT 模式（默认）：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E6%A1%A5%E6%8E%A5%E6%A8%A1%E5%BC%8F"><span class="toc-text">2、桥接模式</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E3%80%906%E3%80%91-gitignore-%E6%96%87%E4%BB%B6"><span class="toc-text">【6】.gitignore 文件</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81-gitignore-%E6%96%87%E4%BB%B6-%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="toc-text">1、.gitignore 文件 是什么？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E7%94%A8%EF%BC%9F"><span class="toc-text">2、什么时候用？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81%E6%80%8E%E4%B9%88%E7%94%A8%EF%BC%9F"><span class="toc-text">3、怎么用？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4%E3%80%81%E6%80%8E%E4%B9%88%E7%9F%A5%E9%81%93%E8%AF%A5%E6%94%BE%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="toc-text">4、怎么知道该放什么？</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E3%80%907%E3%80%91%E5%89%8D%E7%AB%AF%E5%B7%A5%E5%85%B7%E5%BA%93"><span class="toc-text">【7】前端工具库</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E3%80%908%E3%80%91Windows-%E2%80%94-GitHub-%E2%80%94-Linux"><span class="toc-text">【8】Windows —&gt; GitHub —&gt; Linux</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81Windows-%E4%BE%A7%EF%BC%9A%E6%8A%8A%E9%A1%B9%E7%9B%AE%E6%8E%A8%E5%88%B0-GitHub"><span class="toc-text">1、Windows 侧：把项目推到 GitHub</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E8%99%9A%E6%8B%9F%E6%9C%BA%E4%BE%A7%EF%BC%9A%E9%85%8D-SSH-key%EF%BC%8C%E5%85%8D%E5%AF%86%E6%8B%89%E4%BB%A3%E7%A0%81"><span class="toc-text">2、虚拟机侧：配 SSH key，免密拉代码</span></a></li></ol></li></ol></li></ol></nav>
+  </details>
+  
+<article class="post-container">
+  <header class="article-header">
+    <a class="article-category" href="/topics/#tools">开发工具</a>
+    <h1 class="post-title">Git 协作与 systemd 服务管理实践</h1>
+    <div class="post-meta"><time datetime="2026-08-29T21:00:00.000Z">2026-08-29</time><span aria-hidden="true"> / </span><a href="/tags/systemd/">systemd</a><span aria-hidden="true"> · </span><a href="/tags/Git/">Git</a><span aria-hidden="true"> · </span><a href="/tags/GitHub/">GitHub</a><span aria-hidden="true"> · </span><a href="/tags/gitignore/">gitignore</a></div>
+    <p class="article-description">记录仓库克隆、忽略规则和 Git 协作中的问题，以及 systemd 服务管理的实践。</p>
+  </header>
+  <div class="post-content"><h2 id="一、遇到的问题"><a href="#一、遇到的问题" class="headerlink" title="一、遇到的问题"></a>一、遇到的问题</h2><h3 id="【1】从-GitHub-上拉取源代码"><a href="#【1】从-GitHub-上拉取源代码" class="headerlink" title="【1】从 GitHub 上拉取源代码"></a>【1】从 GitHub 上拉取源代码</h3><h4 id="1、用-HTTPS-直接克隆："><a href="#1、用-HTTPS-直接克隆：" class="headerlink" title="1、用 HTTPS 直接克隆："></a>1、用 HTTPS 直接克隆：</h4><p>公开仓库，不用配任何凭证</p>
+<p>但不能 push</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> ~/    <span class="comment"># 或者你想放项目的目录</span></span><br><span class="line">git <span class="built_in">clone</span> https://github.com/dubingjie/touchFish.git</span><br></pre></td></tr></table></figure>
+
+<h4 id="2、用-SSH-方式："><a href="#2、用-SSH-方式：" class="headerlink" title="2、用 SSH 方式："></a>2、用 SSH 方式：</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 1. 把公钥加到 GitHub（如已加过可跳过）</span></span><br><span class="line"><span class="built_in">cat</span> ~/.ssh/id_ed25519.pub</span><br><span class="line"><span class="comment"># 复制输出内容，到 GitHub → Settings → SSH and GPG keys 里 New SSH key 粘贴</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 测试连接（看到 &quot;Hi dubingjie! You&#x27;ve successfully authenticated&quot; 即成功）</span></span><br><span class="line">ssh -T git@github.com</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 用 SSH 地址克隆</span></span><br><span class="line">git <span class="built_in">clone</span> git@github.com:dubingjie/touchFish.git</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="【2】依赖安装"><a href="#【2】依赖安装" class="headerlink" title="【2】依赖安装"></a>【2】依赖安装</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 1. 进入项目，创建虚拟环境</span></span><br><span class="line"><span class="built_in">cd</span> ~/touchFish</span><br><span class="line">python3 -m venv .venv</span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 安装依赖（fastapi + uvicorn）</span></span><br><span class="line">.venv/bin/pip install -r backend/requirements.txt</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 启动后端（单端口模式，后端直接托管前端）</span></span><br><span class="line"><span class="built_in">cd</span> backend</span><br><span class="line">../.venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8001</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="【3】改端口"><a href="#【3】改端口" class="headerlink" title="【3】改端口"></a>【3】改端口</h3><p>API 请求会自动发到页面所在的地址和端口</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="variable constant_">API</span> = location.<span class="property">origin</span>;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="【4】systemd-服务"><a href="#【4】systemd-服务" class="headerlink" title="【4】systemd 服务"></a>【4】systemd 服务</h3><p>打开Linux，要执行一次启动命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> ~/touchFish/backend</span><br><span class="line">../.venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8001</span><br></pre></td></tr></table></figure>
+
+
+
+<p>每次开机都要敲一遍很麻烦，可以把它做成 systemd 服务，实现开机自动启动、崩溃自动拉起。</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># /etc/systemd/system/touchfish.service</span></span><br><span class="line"><span class="section">[Unit]</span></span><br><span class="line"><span class="attr">Description</span>=touchFish backend</span><br><span class="line"><span class="attr">After</span>=network.target</span><br><span class="line"></span><br><span class="line"><span class="section">[Service]</span></span><br><span class="line"><span class="attr">WorkingDirectory</span>=/root/touchFish/backend</span><br><span class="line"><span class="attr">ExecStart</span>=/root/touchFish/.venv/bin/python -m uvicorn main:app --host <span class="number">0.0</span>.<span class="number">0.0</span> --port <span class="number">8001</span></span><br><span class="line"><span class="attr">Restart</span>=always</span><br><span class="line"></span><br><span class="line"><span class="section">[Install]</span></span><br><span class="line"><span class="attr">WantedBy</span>=multi-user.target</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">systemctl daemon-reload</span><br><span class="line">systemctl <span class="built_in">enable</span> --now touchfish   <span class="comment"># 立即启动 + 开机自启</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>日常管理命令（改代码后需要重启时用）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">systemctl restart touchfish   <span class="comment"># 重启</span></span><br><span class="line">systemctl status touchfish    <span class="comment"># 查看状态</span></span><br><span class="line">systemctl stop touchfish      <span class="comment"># 停止</span></span><br><span class="line">journalctl -u touchfish -f    <span class="comment"># 看实时日志</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="【5】桥接-和-NAT-的区别"><a href="#【5】桥接-和-NAT-的区别" class="headerlink" title="【5】桥接 和 NAT 的区别"></a>【5】桥接 和 NAT 的区别</h3><h4 id="1、NAT-模式（默认）："><a href="#1、NAT-模式（默认）：" class="headerlink" title="1、NAT 模式（默认）："></a>1、NAT 模式（默认）：</h4><ul>
+<li>虚拟机”藏”在 Windows 后面，借用 Windows 的身份上网。</li>
+<li>虚拟机没有局域网里独立的 IP，它和 Windows 之间是 VMware 内部搭的一个小网络，Windows 扮演”路由器”的角色给它做地址转换。</li>
+<li>结果：虚拟机可以主动访问外网和局域网（单向出去没问题），但局域网里其他机器（包括  Windows 自己）没法主动找到虚拟机——因为它没有独立地址。</li>
+<li>想让 Windows 访问 NAT 模式下的虚拟机，就得手动做端口转发：告诉 VMware “Windows 的 8001 端口收到的请求，转交给虚拟机”。这就是要用 SSH 端口转发的原因——在那种网络模式下这是唯一的路。</li>
+</ul>
+<h4 id="2、桥接模式"><a href="#2、桥接模式" class="headerlink" title="2、桥接模式"></a>2、桥接模式</h4><ul>
+<li>VMware 把虚拟机的网卡直接”桥接”到 Windows 的真实物理网卡上，相当于虚拟机直接插到了家里的路由器&#x2F;交换机上。</li>
+<li>路由器给虚拟机单独分配一个局域网 IP（就是 192.168.3.180），和 Windows 平起平坐。</li>
+<li>结果：局域网里任何设备（Windows、手机、其他电脑）都能直接访问虚拟机，就像访问一台真实存在的独立电脑一样。</li>
+</ul>
+<h3 id="【6】-gitignore-文件"><a href="#【6】-gitignore-文件" class="headerlink" title="【6】.gitignore 文件"></a>【6】.gitignore 文件</h3><h4 id="1、-gitignore-文件-是什么？"><a href="#1、-gitignore-文件-是什么？" class="headerlink" title="1、.gitignore 文件 是什么？"></a>1、.gitignore 文件 是什么？</h4><p>.gitignore 是交给 git 的一张**”名单”**，名单上写的文件&#x2F;文件夹，git 一律无视——git add . 时不会加进去，也就不会上传到 GitHub。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 例如</span></span><br><span class="line">.venv/              <span class="comment"># 整个文件夹忽略</span></span><br><span class="line">__pycache__/        <span class="comment"># 整个文件夹忽略</span></span><br><span class="line">backend/data.json   <span class="comment"># 忽略这个具体文件</span></span><br><span class="line">*.<span class="built_in">log</span>               <span class="comment"># 忽略所有 .log 结尾的文件</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="2、什么时候用？"><a href="#2、什么时候用？" class="headerlink" title="2、什么时候用？"></a>2、什么时候用？</h4><p><strong>凡是”不该进仓库”或”没必要进仓库”的东西，都放进去。具体三类：</strong></p>
+<ol>
+<li><p>会自动生成的</p>
+<p>• Python 的 .venv&#x2F; 虚拟环境（几百 MB，每个人 clone 后自己建，内容还和操作系统有关）</p>
+<p>• <strong>pycache</strong>&#x2F; 缓存（Python 运行自动生成）</p>
+<p>• 前端项目里的 node_modules&#x2F;</p>
+</li>
+<li><p>包含隐私或机密的</p>
+<p> • .env 文件（里面通常是数据库密码、API 密钥）<br> • 配置文件里的账号密码</p>
+</li>
+<li><p>每台机器各自不同的（传上去会互相覆盖）</p>
+<p>backend&#x2F;data.json 摸鱼存档——它在 Windows 和虚拟机上是两份不同的数据，一旦入 git，两边同步时互相覆盖</p>
+</li>
+</ol>
+<h4 id="3、怎么用？"><a href="#3、怎么用？" class="headerlink" title="3、怎么用？"></a>3、怎么用？</h4><p>放在项目根目录（和 .git 文件夹同级），文件名必须正好是 .gitignore</p>
+<h4 id="4、怎么知道该放什么？"><a href="#4、怎么知道该放什么？" class="headerlink" title="4、怎么知道该放什么？"></a>4、怎么知道该放什么？</h4><p>有通用模板，不用自己想（蛮有意思的。。。）</p>
+<p>• GitHub 新建仓库时，有个 Add .gitignore 下拉框，选 Python 就自动生成一份 Python 项目的标准名单<br>• 网上搜 “python gitignore” 能找到官方推荐模板<br>• 踩过一次坑就记住了（比如有人把 500MB 的 venv 传上仓库，clone 到怀疑人生，这辈子都不会忘）</p>
+<h3 id="【7】前端工具库"><a href="#【7】前端工具库" class="headerlink" title="【7】前端工具库"></a>【7】前端工具库</h3><p>不用手写，用 npm 下载</p>
+<p>下载来的所有第三方库，全部装进项目目录下的一个文件夹里——这就是 node_modules&#x2F;</p>
+<ul>
+<li>用 Vue &#x2F; React 搭界面</li>
+<li>用 ECharts 画图表</li>
+<li>用 lodash 处理数据</li>
+</ul>
+<p>项目的 package.json 文件（相当于 Python 的 requirements.txt）</p>
+<p>执行 npm install，npm 照着清单自动下载生成 node_modules&#x2F;</p>
+<table>
+<thead>
+<tr>
+<th>Python 世界</th>
+<th>Node.js 前端世界</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>requirements.txt</td>
+<td>package.json</td>
+</tr>
+<tr>
+<td>pip install</td>
+<td>npm install</td>
+</tr>
+<tr>
+<td>.venv&#x2F;</td>
+<td>node_modules&#x2F;</td>
+</tr>
+</tbody></table>
+<h3 id="【8】Windows-—-GitHub-—-Linux"><a href="#【8】Windows-—-GitHub-—-Linux" class="headerlink" title="【8】Windows —&gt; GitHub —&gt; Linux"></a>【8】Windows —&gt; GitHub —&gt; Linux</h3><h4 id="1、Windows-侧：把项目推到-GitHub"><a href="#1、Windows-侧：把项目推到-GitHub" class="headerlink" title="1、Windows 侧：把项目推到 GitHub"></a>1、Windows 侧：把项目推到 GitHub</h4><p>第 1 步：在 GitHub 网页建仓库</p>
+<p>第 2 步：在 Git Bash 里推送</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">git config --global user.name <span class="string">&quot;dubingjie&quot;</span></span><br><span class="line">git config --global user.email <span class="string">&quot;GitHub注册邮箱&quot;</span></span><br><span class="line">git init</span><br><span class="line">git add .</span><br><span class="line">git commit -m <span class="string">&quot;xxx&quot;</span></span><br><span class="line">git branch -M main</span><br><span class="line">git remote add origin https://github.com/dubingjie/touchFish.git</span><br><span class="line">git push -u origin main</span><br></pre></td></tr></table></figure>
+
+<p>第 4 步：以后每次改代码同步</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git add .</span><br><span class="line">git commit -m <span class="string">&quot;说明改了什么&quot;</span></span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
+
+<p>补充：以后新建的仓库都默认用 main</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git config --global init.defaultBranch main</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="2、虚拟机侧：配-SSH-key，免密拉代码"><a href="#2、虚拟机侧：配-SSH-key，免密拉代码" class="headerlink" title="2、虚拟机侧：配 SSH key，免密拉代码"></a>2、虚拟机侧：配 SSH key，免密拉代码</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ssh-keygen -t ed25519        <span class="comment"># 一路回车</span></span><br><span class="line"><span class="built_in">cat</span> ~/.ssh/id_ed25519.pub    <span class="comment"># 复制这串公钥</span></span><br><span class="line">git <span class="built_in">clone</span> git@github.com:dubingjie/touchFish.git</span><br></pre></td></tr></table></figure>
+
+<p>把公钥粘贴到 GitHub → Settings → SSH keys。</p>
+<p>之后 git clone <a href="mailto:&#103;&#105;&#116;&#x40;&#x67;&#105;&#116;&#x68;&#117;&#x62;&#46;&#99;&#x6f;&#109;">&#103;&#105;&#116;&#x40;&#x67;&#105;&#116;&#x68;&#117;&#x62;&#46;&#99;&#x6f;&#109;</a>:账号&#x2F;touchFish.git 就不需要密码了。</p>
+</div>
+  <nav class="article-end" aria-label="继续阅读"><a href="/topics/">浏览学习专题 <span aria-hidden="true">↗</span></a><a href="#main-content">回到顶部 ↑</a></nav>
+</article>
+
+</div>
+</main>
+
+<footer class="footer linx-footer">
+  <span>记录学习的过程，也记录慢慢想明白的事。</span>
+  <span><a href="https://github.com/dubingjie" target="_blank" rel="noopener noreferrer">GitHub</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://github.com/wu3227834/hexo-theme-aerlume">Aerlume</a></span>
+</footer>
+
+
+<script src="/js/linx.js" defer data-root="/" data-search="/search.json"></script>
+
+<script src="/js/clipboard.js" defer></script>
+<script src="/js/lightbox.js" defer></script>
+
+</body>
+</html>
