@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Git 实用笔记：暂存、分支、回退与协作 · LinX的世界</title>
+  <meta name="description" content="整理 Git 暂存区、差异比较、分支、回退和临时保存等日常操作。">
+  <link rel="canonical" href="https://dubingjie.github.io/2026/08/16/Git/">
+  <meta property="og:title" content="Git 实用笔记：暂存、分支、回退与协作 · LinX的世界">
+  <meta property="og:description" content="整理 Git 暂存区、差异比较、分支、回退和临时保存等日常操作。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dubingjie.github.io/2026/08/16/Git/">
+  <meta property="og:site_name" content="LinX的世界">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  
+<link rel="stylesheet" href="/css/aerlume.css">
+
+  <style>@font-face{font-family:'Aerlume Local';src:url('/fonts/TsangerYuYangT_W03_W03.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}:root{--aerlume-local-font:'Aerlume Local'}</style>
+  
+<link rel="stylesheet" href="/css/linx.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="reading-page">
+<a class="skip-link" href="#main-content">跳到正文</a>
+
+  <main class="reading-shell" id="main-content">
+<div class="reading-tools">
+  <a class="reading-back" data-reading-back href="/"><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18"/></svg><span>返回</span></a>
+</div>
+<div class="article-reading-layout">
+  
+<article class="post-container">
+  <header class="article-header">
+    <a class="article-category" href="/topics/#tools">开发工具</a>
+    <h1 class="post-title">Git 实用笔记：暂存、分支、回退与协作</h1>
+    <div class="post-meta"><time datetime="2026-08-16T18:00:00.000Z">2026-08-16</time><span aria-hidden="true"> / </span><a href="/tags/Git/">Git</a><span aria-hidden="true"> · </span><a href="/tags/GitHub/">GitHub</a></div>
+    <p class="article-description">整理 Git 暂存区、差异比较、分支、回退和临时保存等日常操作。</p>
+  </header>
+  <div class="post-content"><p>1、git restore –staged <file>——效果和</p>
+<p>git reset HEAD <file> 一样，都是取消暂存。</p>
+<p>2、在当前所在的位置，新建文件夹</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">mkdir</span> learngit</span><br></pre></td></tr></table></figure>
+
+<p>3、打印当前工作目录，把当前完整路径显示出来。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">pwd</span></span><br><span class="line">/Users/michael/learngit</span><br></pre></td></tr></table></figure>
+
+<p>4、ls（列出当前文件夹里的内容）、cd ..（退回上一级文件夹）</p>
+<p>5、把仓库强制回退到指定的某次历史提交</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ git reset --hard 1094a</span><br><span class="line">HEAD is now at 83b0afe append GPL</span><br></pre></td></tr></table></figure>
+
+<p>git reset 有三个模式，区别在于”回退之后，工作区和暂存区的文件怎么办”：</p>
+<ul>
+<li>–soft：只移动指针，文件一个字节都不动，回退掉的改动还留着且已暂存</li>
+<li>–mixed（默认）：移动指针，改动保留在工作区但未暂存</li>
+<li>–hard：移动指针，并且把工作区文件强制覆盖成那次提交的内容——未提交的本地修改直接丢弃，找不回来</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">log</span></span><br><span class="line">git reflog</span><br></pre></td></tr></table></figure>
+
+<p>6、cat readme.txt 的意思是：把 readme.txt 这个文件的内容显示在终端里</p>
+<p>7、好难懂的 diff 啊！！？？</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">$ git diff HEAD -- readme.txt</span><br><span class="line">diff --git a/readme.txt b/readme.txt</span><br><span class="line">index 76d770f..a9c5755 100644</span><br><span class="line">--- a/readme.txt</span><br><span class="line">+++ b/readme.txt</span><br><span class="line">@@ -1,4 +1,4 @@</span><br><span class="line">Git is a distributed version control system.</span><br><span class="line">Git is free software distributed under the GPL.</span><br><span class="line">Git has a mutable index called stage.</span><br><span class="line">-Git tracks changes.</span><br><span class="line">+Git tracks changes of files.</span><br></pre></td></tr></table></figure>
+
+<p>a&#x2F; 代表旧版本（HEAD 里的），b&#x2F; 代表新版本（工作区的）</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git diff                  <span class="comment"># 工作区 vs 暂存区</span></span><br><span class="line">git diff --cached         <span class="comment"># 暂存区 vs 版本库（HEAD）</span></span><br><span class="line">git diff HEAD             <span class="comment"># 工作区 vs 版本库（HEAD）</span></span><br><span class="line">git diff HEAD -- readme.txt   <span class="comment"># 同上，但只看 readme.txt 这一个文件</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 1. 改一行 readme.txt，然后看&quot;工作区 vs 暂存区&quot;</span></span><br><span class="line">git diff</span><br><span class="line"><span class="comment"># → 能看到改动（因为工作区新，暂存区旧）</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. add 之后再执行同一个命令</span></span><br><span class="line">git add readme.txt</span><br><span class="line">git diff</span><br><span class="line"><span class="comment"># → 什么都不显示！因为工作区和暂存区现在一样了</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 这时看&quot;暂存区 vs 版本库&quot;</span></span><br><span class="line">git diff --cached</span><br><span class="line"><span class="comment"># → 能看到改动（暂存区比 HEAD 新）</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 4. commit 之后</span></span><br><span class="line">git commit -m <span class="string">&quot;test&quot;</span></span><br><span class="line">git diff</span><br><span class="line">git diff --cached</span><br><span class="line">git diff HEAD</span><br><span class="line"><span class="comment"># → 三个全都不显示！因为三个区内容完全一致了</span></span><br></pre></td></tr></table></figure>
+
+<p>8、git checkout 和git reset 都怎么用，有什么区别</p>
+<p>git checkout   — 本意是”切换”，兼职能”还原文件”</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">git checkout dev        <span class="comment"># 切换到 dev 分支</span></span><br><span class="line">git checkout -b dev     <span class="comment"># 创建 dev 分支并切换过去</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 把工作区的文件还原</span></span><br><span class="line">git checkout -- readme.txt</span><br></pre></td></tr></table></figure>
+
+<p>git reset  — 本意是”移动 HEAD 指针，回退历史”</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 回退版本</span></span><br><span class="line">git reset --hard HEAD^      <span class="comment"># 回退到上一个版本</span></span><br><span class="line">git reset --hard 1094a      <span class="comment"># 回退到指定提交</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 把文件从暂存区撤出来（取消 add）</span></span><br><span class="line">git reset HEAD readme.txt</span><br><span class="line"><span class="comment"># 你 git add 错了文件，想从暂存区拿掉，但工作区的修改保留</span></span><br></pre></td></tr></table></figure>
+
+<p>HEAD^ 表示上一个提交，HEAD^^ 上上个，HEAD~100 往前 100 个</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 场景1：readme.txt 改乱了，想放弃修改（还没 add）</span></span><br><span class="line">git checkout -- readme.txt     <span class="comment"># ✓ 丢弃工作区修改</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 场景2：add 错了，想取消暂存（工作区修改保留）</span></span><br><span class="line">git reset HEAD readme.txt      <span class="comment"># ✓ 从暂存区撤出</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 场景3：commit 错了，想整体回退一个版本</span></span><br><span class="line">git reset --hard HEAD^         <span class="comment"># ✓ 历史和工作区一起回退</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 等价于 git checkout dev（切换分支）</span></span><br><span class="line">git switch dev</span><br><span class="line"></span><br><span class="line"><span class="comment"># 等价于 git checkout -b dev（建分支）</span></span><br><span class="line">git switch -c dev</span><br><span class="line"></span><br><span class="line"><span class="comment"># 等价于 git checkout -- readme.txt（丢弃工作区修改）</span></span><br><span class="line">git restore readme.txt</span><br><span class="line"></span><br><span class="line"><span class="comment"># 等价于 git reset HEAD readme.txt（取消暂存）</span></span><br><span class="line">git restore --staged readme.txt</span><br></pre></td></tr></table></figure>
+
+<p>9、默认分支的切换</p>
+<p>让以后 git init 出来的仓库默认就是 main</p>
+<p>这一条配完，以后你本地新建的所有仓库，第一个分支就叫 main，和 GitHub 默认保持一致，不会再出现 master。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git config --global init.defaultBranch main</span><br></pre></td></tr></table></figure>
+
+<p>当前仓库把 master 改名成 main</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git branch -m master main</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 推送</span></span><br><span class="line">git push -u origin main</span><br></pre></td></tr></table></figure>
+
+<p>10、从远程库克隆</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /d/code              <span class="comment"># 1. 先进入父目录</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 克隆，自动创建 gitskills 子目录</span></span><br><span class="line">git <span class="built_in">clone</span> git@github.com:你的用户名/gitskills.git</span><br><span class="line"></span><br><span class="line"><span class="built_in">cd</span> gitskills          <span class="comment"># 3. 进入克隆下来的项目</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">ls</span>      <span class="comment"># 4. 能看到 README.md 和隐藏的 .git 目录</span></span><br></pre></td></tr></table></figure>
+
+<p>11、分支相关命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 建分支：放一个指向当前提交的新指针，并切过去</span></span><br><span class="line">git switch -c dev</span><br><span class="line"></span><br><span class="line"><span class="comment"># 切分支：把 HEAD 挪到 master（瞬间完成）</span></span><br><span class="line">git switch master</span><br><span class="line"></span><br><span class="line"><span class="comment"># 合并：把 dev 这条线的成果并到当前分支</span></span><br><span class="line">git merge dev</span><br><span class="line"></span><br><span class="line"><span class="comment"># 删分支：摘掉那个指针（提交历史还在）</span></span><br><span class="line">git branch -d dev</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 查看：列出所有本地分支，带 * 的是当前所在分支</span></span><br><span class="line">git branch</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建：新建一个叫 dev 的分支，但是不会切换</span></span><br><span class="line">git branch dev</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">git branch dev       <span class="comment"># 创建 dev，但不切换</span></span><br><span class="line">git switch dev       <span class="comment"># 切换到已有的 dev（分支必须已存在）</span></span><br><span class="line">git switch -c dev    <span class="comment"># 创建 dev 并立即切换过去（-c = create）</span></span><br><span class="line">git checkout dev     <span class="comment"># 老版写法，切换到 dev</span></span><br><span class="line">git checkout -b dev  <span class="comment"># 老版写法，创建并切换</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">log</span> --graph      <span class="comment"># 查看分支合并图。</span></span><br></pre></td></tr></table></figure>
+
+<p>Fast-forward 的含义：</p>
+<p>Fast-forward（快进）是 Git 合并分支时的一种最省事的情况：当你要合并的分支只是在你当前分支的基础上往前多走了几步，中间没有分叉时，Git 不需要做任何”合并计算”，直接把当前分支的指针往前挪到目标位置。</p>
+<p>–no-ff：故意禁用快进</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git merge --no-ff -m <span class="string">&quot;merge feature1: add xxx功能&quot;</span> feature1</span><br></pre></td></tr></table></figure>
+
+<p>12、git stash的含义、用法、场景</p>
+<p>git stash 的作用是：把工作区和暂存区里没提交的改动打包存进一个”临时储藏柜”，把工作区还原干净，之后随时可以取出来恢复。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">git stash             <span class="comment"># ① 半成品收进柜子，工作区瞬间干净</span></span><br><span class="line">git switch master     <span class="comment"># ② 安心切到 master</span></span><br><span class="line">git switch -c hotfix  <span class="comment"># ③ 建修复分支，改 bug，提交，合并，发布</span></span><br><span class="line">git switch dev        <span class="comment"># ④ 回到 dev 继续干活</span></span><br><span class="line">git stash pop         <span class="comment"># ⑤ 把柜子里的半成品倒出来，接着写</span></span><br></pre></td></tr></table></figure>
+
+<p>stash 用法全览：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 最基本的用法</span></span><br><span class="line">git stash</span><br><span class="line"></span><br><span class="line"><span class="comment"># 加备注，强烈推荐（柜子里东西多了好认）</span></span><br><span class="line">git stash -m <span class="string">&quot;写到一半的登录功能&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 连&quot;未跟踪的新文件&quot;也一起收（默认只收已跟踪文件的改动）</span></span><br><span class="line">git stash -u </span><br></pre></td></tr></table></figure>
+
+<p>查看柜子里有什么：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git stash list</span><br><span class="line"><span class="comment"># stash@&#123;0&#125;: On dev: 写到一半的登录功能</span></span><br><span class="line"><span class="comment"># stash@&#123;1&#125;: WIP on master: a1b2c3d fix typo</span></span><br></pre></td></tr></table></figure>
+
+<p>从柜子里取出来：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 取出最新一份（stash@&#123;0&#125;），取完从柜子里删掉</span></span><br><span class="line">git stash pop</span><br><span class="line"></span><br><span class="line"><span class="comment"># 取出最新一份，但柜子里保留副本</span></span><br><span class="line">git stash apply</span><br><span class="line"></span><br><span class="line"><span class="comment"># 指定取某一份</span></span><br><span class="line">git stash apply stash@&#123;1&#125;</span><br></pre></td></tr></table></figure>
+
+<p>清理：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git stash drop stash@&#123;0&#125;  <span class="comment"># 删掉某一份</span></span><br><span class="line">git stash clear           <span class="comment"># 清空整个柜子（慎用）</span></span><br><span class="line">git stash show -p         <span class="comment"># 查看某份 stash 里具体改了什么内容</span></span><br></pre></td></tr></table></figure>
+
+<p>13、cherry-pick 介绍：</p>
+<p>cherry-pick 是什么</p>
+<p>cherry-pick 英文原意是”摘樱桃”——从一堆里只挑自己要的。Git 里它的作用是：把另一个分支上的某一次（或几次）提交，单独”摘”过来，复制到当前分支上。（不是全要，是选取）</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git cherry-pick C4的编号</span><br></pre></td></tr></table></figure>
+
+<p>C4’ 是 C4 的复制品——改动内容一样，但提交编号变了（因为它嫁接在不同的历史上）。</p>
+<p>用法：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 1. 先站到&quot;接收方&quot;分支上</span></span><br><span class="line">git switch master</span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 查看 dev 的提交历史，找到想要那个提交的编号</span></span><br><span class="line">git <span class="built_in">log</span> dev --oneline</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 把那个提交摘过来</span></span><br><span class="line">git cherry-pick a1b2c3d      </span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 向GitHub服务器发送一个请求，只取回响应头，不加载网页内容</span></span><br><span class="line"><span class="comment"># 用来测试能否连上 GitHub</span></span><br><span class="line">curl.exe -I https://github.com</span><br></pre></td></tr></table></figure>
+
+
+
+<p>给git配上代理：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 改成相应的端口号</span></span><br><span class="line">git config --global http.proxy http://127.0.0.1:7890</span><br><span class="line">git config --global https.proxy http://127.0.0.1:7890</span><br><span class="line"></span><br><span class="line"><span class="comment"># 取消代理</span></span><br><span class="line">git config --global --<span class="built_in">unset</span> http.proxy</span><br><span class="line">git config --global --<span class="built_in">unset</span> https.proxy</span><br></pre></td></tr></table></figure>
+
+<p>查看是否生效：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git config --global --get http.proxy</span><br><span class="line">git config --global --get https.proxy</span><br></pre></td></tr></table></figure>
+
+<p>一次性列出所有全局配置</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git config --global -l</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+</div>
+  <nav class="article-end" aria-label="继续阅读"><a href="/topics/">浏览学习专题 <span aria-hidden="true">↗</span></a><a href="#main-content">回到顶部 ↑</a></nav>
+</article>
+
+</div>
+</main>
+
+<footer class="footer linx-footer">
+  <span>记录学习的过程，也记录慢慢想明白的事。</span>
+  <span><a href="https://github.com/dubingjie" target="_blank" rel="noopener noreferrer">GitHub</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://github.com/wu3227834/hexo-theme-aerlume">Aerlume</a></span>
+</footer>
+
+
+<script src="/js/linx.js" defer data-root="/" data-search="/search.json"></script>
+
+<script src="/js/clipboard.js" defer></script>
+<script src="/js/lightbox.js" defer></script>
+
+</body>
+</html>

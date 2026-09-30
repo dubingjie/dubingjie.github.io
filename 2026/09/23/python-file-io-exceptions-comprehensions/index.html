@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Python 文件操作：读写模式、异常处理与推导式 · LinX的世界</title>
+  <meta name="description" content="整理文件打开模式、读取与写入、指针操作和字符串拆分连接，并归纳异常处理、断言、推导式、矩阵转置与生成器表达式。">
+  <link rel="canonical" href="https://dubingjie.github.io/2026/09/23/python-file-io-exceptions-comprehensions/">
+  <meta property="og:title" content="Python 文件操作：读写模式、异常处理与推导式 · LinX的世界">
+  <meta property="og:description" content="整理文件打开模式、读取与写入、指针操作和字符串拆分连接，并归纳异常处理、断言、推导式、矩阵转置与生成器表达式。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dubingjie.github.io/2026/09/23/python-file-io-exceptions-comprehensions/">
+  <meta property="og:site_name" content="LinX的世界">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  
+<link rel="stylesheet" href="/css/aerlume.css">
+
+  <style>@font-face{font-family:'Aerlume Local';src:url('/fonts/TsangerYuYangT_W03_W03.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}:root{--aerlume-local-font:'Aerlume Local'}</style>
+  
+<link rel="stylesheet" href="/css/linx.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="reading-page">
+<a class="skip-link" href="#main-content">跳到正文</a>
+
+  <main class="reading-shell" id="main-content">
+<div class="reading-tools">
+  <a class="reading-back" data-reading-back href="/"><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18"/></svg><span>返回</span></a>
+</div>
+<div class="article-reading-layout has-toc">
+  
+  <details class="reading-toc" id="reading-toc" open>
+    <summary><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="toc-open-label">目录</span><span class="toc-hide-label">隐藏 ←</span><span class="toc-show-label">目录 →</span></summary>
+    <nav class="reading-toc-panel" aria-label="文章目录"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Python-%E6%96%87%E4%BB%B6%E6%93%8D%E4%BD%9C%E4%B8%8E%E8%BF%9B%E9%98%B6%E7%9F%A5%E8%AF%86%E6%80%BB%E7%BB%93"><span class="toc-text">Python 文件操作与进阶知识总结</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%96%87%E4%BB%B6%E6%89%93%E5%BC%80%E6%A8%A1%E5%BC%8F"><span class="toc-text">一、文件打开模式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96%E6%96%B9%E6%B3%95"><span class="toc-text">二、文件读取方法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%96%87%E4%BB%B6%E6%8C%87%E9%92%88%E6%93%8D%E4%BD%9C"><span class="toc-text">三、文件指针操作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E6%96%87%E4%BB%B6%E5%86%99%E5%85%A5%E6%96%B9%E6%B3%95"><span class="toc-text">四、文件写入方法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81join-%E4%B8%8E-split"><span class="toc-text">五、join 与 split</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86"><span class="toc-text">六、异常处理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81assert-%E6%96%AD%E8%A8%80"><span class="toc-text">七、assert 断言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E6%8E%A8%E5%AF%BC%E5%BC%8F"><span class="toc-text">八、推导式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E7%9F%A9%E9%98%B5%E8%BD%AC%E7%BD%AE"><span class="toc-text">九、矩阵转置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E3%80%81%E7%94%9F%E6%88%90%E5%99%A8%E8%A1%A8%E8%BE%BE%E5%BC%8F"><span class="toc-text">十、生成器表达式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E4%B8%80%E3%80%81%E9%80%9F%E6%9F%A5%E8%A1%A8"><span class="toc-text">十一、速查表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E4%BA%8C%E3%80%81%E6%A0%B8%E5%BF%83%E8%AE%B0%E5%BF%86%E5%8F%A3%E8%AF%80"><span class="toc-text">十二、核心记忆口诀</span></a></li></ol></li></ol></nav>
+  </details>
+  
+<article class="post-container">
+  <header class="article-header">
+    <a class="article-category" href="/topics/#python">Python</a>
+    <h1 class="post-title">Python 文件操作：读写模式、异常处理与推导式</h1>
+    <div class="post-meta"><time datetime="2026-09-23T00:00:00.000Z">2026-09-23</time><span aria-hidden="true"> / </span><a href="/tags/Python/">Python</a><span aria-hidden="true"> · </span><a href="/tags/%E6%8E%A8%E5%AF%BC%E5%BC%8F/">推导式</a><span aria-hidden="true"> · </span><a href="/tags/%E6%96%87%E4%BB%B6%E6%93%8D%E4%BD%9C/">文件操作</a><span aria-hidden="true"> · </span><a href="/tags/%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/">异常处理</a><span aria-hidden="true"> · </span><a href="/tags/%E7%94%9F%E6%88%90%E5%99%A8/">生成器</a></div>
+    <p class="article-description">整理文件打开模式、读取与写入、指针操作和字符串拆分连接，并归纳异常处理、断言、推导式、矩阵转置与生成器表达式。</p>
+  </header>
+  <div class="post-content"><h1 id="Python-文件操作与进阶知识总结"><a href="#Python-文件操作与进阶知识总结" class="headerlink" title="Python 文件操作与进阶知识总结"></a>Python 文件操作与进阶知识总结</h1><h2 id="一、文件打开模式"><a href="#一、文件打开模式" class="headerlink" title="一、文件打开模式"></a>一、文件打开模式</h2><table>
+<thead>
+<tr>
+<th>模式</th>
+<th>可读</th>
+<th>可写</th>
+<th>打开时行为</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>r</code></td>
+<td>是</td>
+<td>否</td>
+<td>文件必须存在</td>
+<td>读文本</td>
+</tr>
+<tr>
+<td><code>w</code></td>
+<td>否</td>
+<td>是</td>
+<td>清空文件</td>
+<td>覆盖写</td>
+</tr>
+<tr>
+<td><code>a</code></td>
+<td>否</td>
+<td>是</td>
+<td>光标在末尾</td>
+<td>追加写</td>
+</tr>
+<tr>
+<td><code>r+</code></td>
+<td>是</td>
+<td>是</td>
+<td>不清空，光标在开头</td>
+<td>读写</td>
+</tr>
+<tr>
+<td><code>rb</code></td>
+<td>是</td>
+<td>否</td>
+<td>二进制读</td>
+<td>图片&#x2F;音频&#x2F;视频</td>
+</tr>
+<tr>
+<td><code>wb</code></td>
+<td>否</td>
+<td>是</td>
+<td>二进制写（清空）</td>
+<td>保存二进制文件</td>
+</tr>
+</tbody></table>
+<p>要点</p>
+<ul>
+<li>文本文件用 <code>r/w/a</code>，二进制文件用 <code>rb/wb</code></li>
+<li>图片、音频、视频、压缩包必须用二进制模式</li>
+<li>用文本模式读二进制会报：<code>&#39;utf-8&#39; codec can&#39;t decode byte 0xff...</code></li>
+<li>二进制读到的是 <code>bytes</code> 对象，形如 <code>b&#39;\xff\xd8\xff\xe0...&#39;</code></li>
+</ul>
+<hr>
+<h2 id="二、文件读取方法"><a href="#二、文件读取方法" class="headerlink" title="二、文件读取方法"></a>二、文件读取方法</h2><table>
+<thead>
+<tr>
+<th>方法</th>
+<th>作用</th>
+<th>返回类型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>fp.read()</code></td>
+<td>读全部（等价 <code>read(-1)</code>）</td>
+<td><code>str</code></td>
+</tr>
+<tr>
+<td><code>fp.read(n)</code></td>
+<td>读 n 个字符</td>
+<td><code>str</code></td>
+</tr>
+<tr>
+<td><code>fp.readline()</code></td>
+<td>读一行</td>
+<td><code>str</code></td>
+</tr>
+<tr>
+<td><code>fp.readlines()</code></td>
+<td>读所有行</td>
+<td><code>list</code></td>
+</tr>
+<tr>
+<td><code>for line in fp</code></td>
+<td>逐行迭代</td>
+<td><code>str</code></td>
+</tr>
+</tbody></table>
+<p>要点</p>
+<ul>
+<li><code>read(n)</code> 单位是字符，从当前光标往后读</li>
+<li>连续 <code>read(n)</code> 是分段往后读</li>
+<li>文件指针只往前走，读完再读返回空</li>
+<li>想重新读用 <code>fp.seek(0)</code></li>
+</ul>
+<hr>
+<h2 id="三、文件指针操作"><a href="#三、文件指针操作" class="headerlink" title="三、文件指针操作"></a>三、文件指针操作</h2><table>
+<thead>
+<tr>
+<th>方法</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>fp.tell()</code></td>
+<td>查看当前指针字节位置</td>
+</tr>
+<tr>
+<td><code>fp.seek(位置)</code></td>
+<td>移动到指定位置</td>
+</tr>
+<tr>
+<td><code>fp.seek(0)</code></td>
+<td>回到开头</td>
+</tr>
+<tr>
+<td><code>fp.seek(偏移, 起点)</code></td>
+<td>起点：<code>0</code> 开头 &#x2F; <code>1</code> 当前 &#x2F; <code>2</code> 末尾</td>
+</tr>
+</tbody></table>
+<p>要点</p>
+<ul>
+<li><code>tell()</code> 和 <code>seek()</code> 都按字节算</li>
+<li>中文在 UTF-8 下占 3 个字节</li>
+<li>文本模式下 <code>seek</code> 只建议用 <code>seek(0)</code></li>
+<li>二进制模式 <code>rb</code> 下可随意 <code>seek</code></li>
+</ul>
+<hr>
+<h2 id="四、文件写入方法"><a href="#四、文件写入方法" class="headerlink" title="四、文件写入方法"></a>四、文件写入方法</h2><table>
+<thead>
+<tr>
+<th>方法</th>
+<th>参数</th>
+<th>自动换行</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>fp.write(s)</code></td>
+<td>一个字符串</td>
+<td>否</td>
+</tr>
+<tr>
+<td><code>fp.writelines(list)</code></td>
+<td>一个列表</td>
+<td>否</td>
+</tr>
+<tr>
+<td><code>fp.writable()</code></td>
+<td>无</td>
+<td>判断是否可写</td>
+</tr>
+</tbody></table>
+<p>要点</p>
+<ul>
+<li><code>write</code> 和 <code>writelines</code> 都不自动加换行，要换行自己写 <code>\n</code></li>
+<li><code>writelines</code> 标准用法是传列表</li>
+<li><code>with</code> 块内可连续多次 write</li>
+<li><code>w</code> 模式打开即清空文件</li>
+</ul>
+<hr>
+<h2 id="五、join-与-split"><a href="#五、join-与-split" class="headerlink" title="五、join 与 split"></a>五、join 与 split</h2><p>join：列表转字符串</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&quot;|&quot;</span>.join([<span class="string">&quot;dream&quot;</span>, <span class="string">&quot;521&quot;</span>, <span class="string">&quot;18&quot;</span>])   <span class="comment"># &quot;dream|521|18&quot;</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>分隔符只在元素之间出现，末尾不会多</li>
+<li>只能拼接字符串列表，有数字要先转：<code>&quot;|&quot;.join(str(x) for x in lst)</code></li>
+</ul>
+<p>split：字符串转列表</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&quot;dream|521|18&quot;</span>.split(<span class="string">&quot;|&quot;</span>)   <span class="comment"># [&quot;dream&quot;, &quot;521&quot;, &quot;18&quot;]</span></span><br></pre></td></tr></table></figure>
+
+<p>末尾分隔符的坑</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&quot;dream|521|18|男|ok|&quot;</span>.split(<span class="string">&quot;|&quot;</span>)</span><br><span class="line"><span class="comment"># [&#x27;dream&#x27;, &#x27;521&#x27;, &#x27;18&#x27;, &#x27;男&#x27;, &#x27;ok&#x27;, &#x27;&#x27;]   末尾多个空串</span></span><br></pre></td></tr></table></figure>
+
+<p>建议写入用 <code>&quot;|&quot;.join(...)</code>，读取就能干净地拆。</p>
+<hr>
+<h2 id="六、异常处理"><a href="#六、异常处理" class="headerlink" title="六、异常处理"></a>六、异常处理</h2><p>语法框架</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span>:</span><br><span class="line">    <span class="comment"># 可能出错的代码</span></span><br><span class="line"><span class="keyword">except</span> 异常类型:</span><br><span class="line">    <span class="comment"># 出错后怎么办</span></span><br><span class="line"><span class="keyword">else</span>:</span><br><span class="line">    <span class="comment"># 没出错时执行（可选）</span></span><br><span class="line"><span class="keyword">finally</span>:</span><br><span class="line">    <span class="comment"># 无论如何都执行（可选）</span></span><br></pre></td></tr></table></figure>
+
+<p>四个关键字</p>
+<table>
+<thead>
+<tr>
+<th>关键字</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>try</code></td>
+<td>试着执行</td>
+</tr>
+<tr>
+<td><code>except</code></td>
+<td>捕获异常</td>
+</tr>
+<tr>
+<td><code>else</code></td>
+<td>没出错时执行</td>
+</tr>
+<tr>
+<td><code>finally</code></td>
+<td>无论如何都执行</td>
+</tr>
+</tbody></table>
+<p>执行顺序</p>
+<ul>
+<li>出错：走 <code>except</code>，不执行 <code>else</code></li>
+<li>没出错：不执行 <code>except</code>，走 <code>else</code></li>
+<li><code>finally</code> 永远执行</li>
+</ul>
+<p>常见异常</p>
+<table>
+<thead>
+<tr>
+<th>异常</th>
+<th>触发场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ValueError</code></td>
+<td>类型对但值不对，如 <code>int(&quot;abc&quot;)</code></td>
+</tr>
+<tr>
+<td><code>TypeError</code></td>
+<td>类型不对，如 <code>1 + &quot;a&quot;</code></td>
+</tr>
+<tr>
+<td><code>ZeroDivisionError</code></td>
+<td>除以 0</td>
+</tr>
+<tr>
+<td><code>IndexError</code></td>
+<td>列表下标越界</td>
+</tr>
+<tr>
+<td><code>KeyError</code></td>
+<td>字典键不存在</td>
+</tr>
+<tr>
+<td><code>FileNotFoundError</code></td>
+<td>文件不存在</td>
+</tr>
+<tr>
+<td><code>AttributeError</code></td>
+<td>对象没有该属性&#x2F;方法</td>
+</tr>
+</tbody></table>
+<p>使用原则</p>
+<ul>
+<li>精确捕获具体异常，别用 <code>except: pass</code></li>
+<li><code>finally</code> 做收尾</li>
+<li>用 <code>raise</code> 主动报业务错误</li>
+</ul>
+<hr>
+<h2 id="七、assert-断言"><a href="#七、assert-断言" class="headerlink" title="七、assert 断言"></a>七、assert 断言</h2><p>语法</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">assert</span> 条件, <span class="string">&quot;异常信息&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>等价于</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="keyword">not</span> 条件:</span><br><span class="line">    <span class="keyword">raise</span> AssertionError(<span class="string">&quot;异常信息&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>与 raise 对比</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>raise</code></th>
+<th><code>assert</code></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>写法</td>
+<td><code>if not 条件: raise</code></td>
+<td><code>assert 条件, &quot;信息&quot;</code></td>
+</tr>
+<tr>
+<td>异常类型</td>
+<td>自定义</td>
+<td>固定 <code>AssertionError</code></td>
+</tr>
+<tr>
+<td>用途</td>
+<td>正式错误拦截</td>
+<td>调试 &#x2F; 内部检查</td>
+</tr>
+<tr>
+<td>能否禁用</td>
+<td>不能</td>
+<td>能（<code>python -O</code>）</td>
+</tr>
+</tbody></table>
+<p>正式错误检查用 <code>raise</code>，<code>assert</code> 只用于调试。</p>
+<hr>
+<h2 id="八、推导式"><a href="#八、推导式" class="headerlink" title="八、推导式"></a>八、推导式</h2><p>三种类型</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>符号</th>
+<th>语法</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>列表推导式</td>
+<td><code>[]</code></td>
+<td><code>[表达式 for x in 可迭代 if 条件]</code></td>
+<td><code>list</code></td>
+</tr>
+<tr>
+<td>字典生成式</td>
+<td><code>&#123;&#125;</code></td>
+<td><code>&#123;键: 值 for x in 可迭代 if 条件&#125;</code></td>
+<td><code>dict</code></td>
+</tr>
+<tr>
+<td>集合推导式</td>
+<td><code>&#123;&#125;</code></td>
+<td><code>&#123;表达式 for x in 可迭代 if 条件&#125;</code></td>
+<td><code>set</code></td>
+</tr>
+</tbody></table>
+<p>字典和集合都用 <code>&#123;&#125;</code>，区别是有没有冒号 <code>:</code>。</p>
+<p>万能翻译</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[表达式 <span class="keyword">for</span> x <span class="keyword">in</span> 可迭代 <span class="keyword">if</span> 条件]</span><br></pre></td></tr></table></figure>
+
+<p>等价于</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">result = []</span><br><span class="line"><span class="keyword">for</span> x <span class="keyword">in</span> 可迭代:</span><br><span class="line">    <span class="keyword">if</span> 条件:</span><br><span class="line">        result.append(表达式)</span><br></pre></td></tr></table></figure>
+
+<p>if 与 if-else 的位置</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[i <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">10</span>) <span class="keyword">if</span> i % <span class="number">2</span> == <span class="number">0</span>]              <span class="comment"># if 在后面，筛选</span></span><br><span class="line">[<span class="string">&quot;偶&quot;</span> <span class="keyword">if</span> i % <span class="number">2</span> == <span class="number">0</span> <span class="keyword">else</span> <span class="string">&quot;奇&quot;</span> <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">5</span>)]  <span class="comment"># if-else 在前面，变换</span></span><br></pre></td></tr></table></figure>
+
+<p>多个 for 的顺序</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[i * j <span class="keyword">for</span> i <span class="keyword">in</span> num_one <span class="keyword">for</span> j <span class="keyword">in</span> num_two]</span><br></pre></td></tr></table></figure>
+
+<p>从左到右，从外到内，先外后内。</p>
+<p>等价于</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> num_one:        <span class="comment"># 外层</span></span><br><span class="line">    <span class="keyword">for</span> j <span class="keyword">in</span> num_two:    <span class="comment"># 内层</span></span><br><span class="line">        ...</span><br></pre></td></tr></table></figure>
+
+<p>嵌套推导式</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[[line[i] <span class="keyword">for</span> line <span class="keyword">in</span> res] <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="built_in">len</span>(res[<span class="number">0</span>]))]</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>外层 <code>[]</code> 的 for 是外层循环</li>
+<li>内层 <code>[]</code> 是内层循环</li>
+</ul>
+<p>“左边是外层”只适用于同一方括号里并列的多个 for。</p>
+<p>笛卡尔积与一一配对</p>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>逻辑</th>
+<th>结果个数</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>[i*j for i in A for j in B]</code></td>
+<td>交叉相乘</td>
+<td><code>len(A) × len(B)</code></td>
+</tr>
+<tr>
+<td><code>[a*b for a,b in zip(A,B)]</code></td>
+<td>同位置配对</td>
+<td><code>min(len(A), len(B))</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="九、矩阵转置"><a href="#九、矩阵转置" class="headerlink" title="九、矩阵转置"></a>九、矩阵转置</h2><p>原始数据</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">res = [[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>],</span><br><span class="line">       [<span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>],</span><br><span class="line">       [<span class="number">9</span>, <span class="number">10</span>, <span class="number">11</span>, <span class="number">12</span>]]   <span class="comment"># 3 行 4 列</span></span><br></pre></td></tr></table></figure>
+
+<p>转置思路</p>
+<p>固定一列，把每一行在该列的元素收集起来，成为新的一行。</p>
+<p>三种写法</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 写法 1：双重 for</span></span><br><span class="line">num_list = []</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="built_in">len</span>(res[<span class="number">0</span>])):</span><br><span class="line">    inner = []</span><br><span class="line">    <span class="keyword">for</span> line <span class="keyword">in</span> res:</span><br><span class="line">        inner.append(line[i])</span><br><span class="line">    num_list.append(inner)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 写法 2：嵌套推导式</span></span><br><span class="line">num_list = [[line[i] <span class="keyword">for</span> line <span class="keyword">in</span> res] <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="built_in">len</span>(res[<span class="number">0</span>]))]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 写法 3：zip（推荐）</span></span><br><span class="line">num_list = [<span class="built_in">list</span>(col) <span class="keyword">for</span> col <span class="keyword">in</span> <span class="built_in">zip</span>(*res)]</span><br></pre></td></tr></table></figure>
+
+<p>结果</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[[<span class="number">1</span>, <span class="number">5</span>, <span class="number">9</span>], [<span class="number">2</span>, <span class="number">6</span>, <span class="number">10</span>], [<span class="number">3</span>, <span class="number">7</span>, <span class="number">11</span>], [<span class="number">4</span>, <span class="number">8</span>, <span class="number">12</span>]]   <span class="comment"># 4 行 3 列</span></span><br></pre></td></tr></table></figure>
+
+<p>zip 要点</p>
+<ul>
+<li><code>zip</code> 每次返回的是元组</li>
+<li><code>list(col)</code> 把元组转成列表</li>
+<li><code>zip(*res)</code> 中的 <code>*</code> 是解包</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>每个元素类型</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>list(zip(*res))</code></td>
+<td><code>tuple</code></td>
+<td><code>[(1,5,9), (2,6,10), ...]</code></td>
+</tr>
+<tr>
+<td><code>[list(col) for col in zip(*res)]</code></td>
+<td><code>list</code></td>
+<td><code>[[1,5,9], [2,6,10], ...]</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="十、生成器表达式"><a href="#十、生成器表达式" class="headerlink" title="十、生成器表达式"></a>十、生成器表达式</h2><p>语法</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(i <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">10</span>) <span class="keyword">if</span> i % <span class="number">2</span> == <span class="number">0</span>)   <span class="comment"># 圆括号</span></span><br></pre></td></tr></table></figure>
+
+<p>与列表推导式对比</p>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>类型</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>[i for i in range(10)]</code></td>
+<td>列表推导式</td>
+<td>立刻算全部，占内存</td>
+</tr>
+<tr>
+<td><code>(i for i in range(10))</code></td>
+<td>生成器表达式</td>
+<td>懒计算，用一个取一个，省内存</td>
+</tr>
+</tbody></table>
+<p>特点</p>
+<ul>
+<li>打印出来是 <code>&lt;generator object &lt;genexpr&gt; at 0x...&gt;</code></li>
+<li>只能用一次</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">gen = (i <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">5</span>))</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">list</span>(gen))   <span class="comment"># [0,1,2,3,4]</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">list</span>(gen))   <span class="comment"># []  空了</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>取值方式</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">list</span>(gen)         <span class="comment"># 全部取出</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> gen:     <span class="comment"># 遍历</span></span><br><span class="line"><span class="built_in">next</span>(gen)         <span class="comment"># 一个一个取</span></span><br></pre></td></tr></table></figure>
+
+<p>为什么用生成器</p>
+<p>省内存。处理海量数据时，生成器一次只留一个元素，列表则要全部存内存。</p>
+<hr>
+<h2 id="十一、速查表"><a href="#十一、速查表" class="headerlink" title="十一、速查表"></a>十一、速查表</h2><p>读取方法</p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>返回</th>
+<th>单位</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>read()</code></td>
+<td><code>str</code></td>
+<td>全部</td>
+</tr>
+<tr>
+<td><code>read(n)</code></td>
+<td><code>str</code></td>
+<td>n 个字符</td>
+</tr>
+<tr>
+<td><code>readline()</code></td>
+<td><code>str</code></td>
+<td>一行</td>
+</tr>
+<tr>
+<td><code>readlines()</code></td>
+<td><code>list</code></td>
+<td>所有行</td>
+</tr>
+<tr>
+<td><code>for line in fp</code></td>
+<td><code>str</code></td>
+<td>一行</td>
+</tr>
+</tbody></table>
+<p>模式对比</p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>读</th>
+<th>写</th>
+<th>清空</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>r</code></td>
+<td>是</td>
+<td>否</td>
+<td>否</td>
+</tr>
+<tr>
+<td><code>w</code></td>
+<td>否</td>
+<td>是</td>
+<td>是</td>
+</tr>
+<tr>
+<td><code>a</code></td>
+<td>否</td>
+<td>是</td>
+<td>否</td>
+</tr>
+<tr>
+<td><code>r+</code></td>
+<td>是</td>
+<td>是</td>
+<td>否</td>
+</tr>
+</tbody></table>
+<p>推导式对比</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>符号</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>列表推导式</td>
+<td><code>[]</code></td>
+<td><code>list</code></td>
+</tr>
+<tr>
+<td>字典生成式</td>
+<td><code>&#123;k:v ...&#125;</code></td>
+<td><code>dict</code></td>
+</tr>
+<tr>
+<td>集合推导式</td>
+<td><code>&#123;x ...&#125;</code></td>
+<td><code>set</code></td>
+</tr>
+<tr>
+<td>生成器表达式</td>
+<td><code>()</code></td>
+<td><code>generator</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="十二、核心记忆口诀"><a href="#十二、核心记忆口诀" class="headerlink" title="十二、核心记忆口诀"></a>十二、核心记忆口诀</h2><ol>
+<li>文本用 <code>r/w/a</code>，二进制用 <code>rb/wb</code></li>
+<li>文件指针只往前走，回头要用 <code>seek(0)</code></li>
+<li><code>tell/seek</code> 按字节算，中文占 3 字节</li>
+<li><code>write/writelines</code> 都不自动换行，要换行自己加 <code>\n</code></li>
+<li><code>join</code> 末尾不多个分隔符，<code>split</code> 遇末尾分隔符会多空串</li>
+<li>异常四件套：<code>try / except / else / finally</code></li>
+<li><code>assert</code> 是 <code>if not ... raise</code> 的简写，<code>-O</code> 会禁用</li>
+<li>推导式多个 for：从左到右，从外到内</li>
+<li><code>zip</code> 吐元组，要列表就 <code>list()</code></li>
+<li>生成器省内存，但只能用一次</li>
+</ol>
+</div>
+  <nav class="article-end" aria-label="继续阅读"><a href="/topics/">浏览学习专题 <span aria-hidden="true">↗</span></a><a href="#main-content">回到顶部 ↑</a></nav>
+</article>
+
+</div>
+</main>
+
+<footer class="footer linx-footer">
+  <span>记录学习的过程，也记录慢慢想明白的事。</span>
+  <span><a href="https://github.com/dubingjie" target="_blank" rel="noopener noreferrer">GitHub</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://github.com/wu3227834/hexo-theme-aerlume">Aerlume</a></span>
+</footer>
+
+
+<script src="/js/linx.js" defer data-root="/" data-search="/search.json"></script>
+
+<script src="/js/clipboard.js" defer></script>
+<script src="/js/lightbox.js" defer></script>
+
+</body>
+</html>

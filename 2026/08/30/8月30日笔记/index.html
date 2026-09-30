@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redis 验证码实践与 Docker 入门 · LinX的世界</title>
+  <meta name="description" content="通过验证码示例理解 Redis 的读写和过期机制，再学习 Docker 的核心概念与常用命令。">
+  <link rel="canonical" href="https://dubingjie.github.io/2026/08/30/8%E6%9C%8830%E6%97%A5%E7%AC%94%E8%AE%B0/">
+  <meta property="og:title" content="Redis 验证码实践与 Docker 入门 · LinX的世界">
+  <meta property="og:description" content="通过验证码示例理解 Redis 的读写和过期机制，再学习 Docker 的核心概念与常用命令。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dubingjie.github.io/2026/08/30/8%E6%9C%8830%E6%97%A5%E7%AC%94%E8%AE%B0/">
+  <meta property="og:site_name" content="LinX的世界">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  
+<link rel="stylesheet" href="/css/aerlume.css">
+
+  <style>@font-face{font-family:'Aerlume Local';src:url('/fonts/TsangerYuYangT_W03_W03.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}:root{--aerlume-local-font:'Aerlume Local'}</style>
+  
+<link rel="stylesheet" href="/css/linx.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="reading-page">
+<a class="skip-link" href="#main-content">跳到正文</a>
+
+  <main class="reading-shell" id="main-content">
+<div class="reading-tools">
+  <a class="reading-back" data-reading-back href="/"><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18"/></svg><span>返回</span></a>
+</div>
+<div class="article-reading-layout has-toc">
+  
+  <details class="reading-toc" id="reading-toc" open>
+    <summary><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="toc-open-label">目录</span><span class="toc-hide-label">隐藏 ←</span><span class="toc-show-label">目录 →</span></summary>
+    <nav class="reading-toc-panel" aria-label="文章目录"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E7%9F%A5%E8%AF%86%E7%82%B9"><span class="toc-text">一、知识点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E3%80%901%E3%80%91%E7%BD%91%E7%BB%9C%E4%B8%AD%E7%9A%84%E4%B8%8A%E8%A1%8C%E9%80%9F%E7%8E%87%E5%92%8C%E4%B8%8B%E8%A1%8C%E9%80%9F%E7%8E%87"><span class="toc-text">【1】网络中的上行速率和下行速率</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E3%80%902%E3%80%91%E6%96%87%E4%BB%B6%E4%B8%8B%E8%BD%BD%E9%80%9F%E5%BA%A6%E5%92%8C%E7%A1%AC%E7%9B%98%E8%AF%BB%E5%86%99%E9%80%9F%E5%BA%A6%E3%80%81"><span class="toc-text">【2】文件下载速度和硬盘读写速度、</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E3%80%903%E3%80%91%E5%85%B3%E7%B3%BB%E6%95%B0%E6%8D%AE%E5%BA%93%E5%92%8C%E5%86%85%E5%AD%98%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="toc-text">【3】关系数据库和内存数据库</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E5%86%85%E5%AD%98%E6%95%B0%E6%8D%AE%E5%BA%93%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="toc-text">1、内存数据库是什么？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E6%9C%89%E5%86%85%E5%AD%98%E6%95%B0%E6%8D%AE%E5%BA%93%EF%BC%9F"><span class="toc-text">2、为什么要有内存数据库？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81%E5%86%85%E5%AD%98%E6%95%B0%E6%8D%AE%E5%BA%93%E6%80%8E%E4%B9%88%E7%94%A8%EF%BC%9F"><span class="toc-text">3、内存数据库怎么用？</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E3%80%904%E3%80%91Windows-%E5%88%86%E5%B1%8F%E7%BB%88%E7%AB%AF"><span class="toc-text">【4】Windows 分屏终端</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81Redis-%E4%BD%BF%E7%94%A8"><span class="toc-text">二、Redis 使用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E5%AE%89%E8%A3%85%E5%B9%B6%E5%90%AF%E5%8A%A8-Redis"><span class="toc-text">第一步：安装并启动 Redis</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E8%BF%9E%E4%B8%8A-Redis"><span class="toc-text">第二步：连上 Redis</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E4%BB%A3%E7%A0%81%E9%87%8C%E7%9C%9F%E6%AD%A3%E8%B0%83%E7%94%A8%EF%BC%88Python-%E7%A4%BA%E4%BE%8B%EF%BC%89"><span class="toc-text">第三步：代码里真正调用（Python 示例）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81Docker-%E4%BD%BF%E7%94%A8"><span class="toc-text">三、Docker 使用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E3%80%901%E3%80%91Docker-%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="toc-text">【1】Docker 是什么？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E3%80%902%E3%80%91%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E7%94%A8-Docker-%EF%BC%9F%E8%A7%A3%E5%86%B3%E4%BB%80%E4%B9%88%E9%97%AE%E9%A2%98%EF%BC%9F"><span class="toc-text">【2】为什么要用 Docker ？解决什么问题？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E3%80%903%E3%80%91Docker-%E8%83%BD%E7%94%A8%E6%9D%A5%E5%81%9A%E4%BB%80%E4%B9%88%EF%BC%9F%E4%BB%80%E4%B9%88%E5%9C%BA%E6%99%AF%E7%94%A8%EF%BC%9F"><span class="toc-text">【3】Docker 能用来做什么？什么场景用？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E3%80%904%E3%80%91Docker-%E6%80%8E%E4%B9%88%E7%94%A8%EF%BC%9F"><span class="toc-text">【4】Docker 怎么用？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E3%80%905%E3%80%91Docker-%E7%9C%9F%E5%AE%9E%E5%9C%BA%E6%99%AF%E6%A1%88%E4%BE%8B"><span class="toc-text">【5】Docker 真实场景案例</span></a></li></ol></li></ol></nav>
+  </details>
+  
+<article class="post-container">
+  <header class="article-header">
+    <a class="article-category" href="/topics/#database">数据库与容器</a>
+    <h1 class="post-title">Redis 验证码实践与 Docker 入门</h1>
+    <div class="post-meta"><time datetime="2026-08-30T18:00:00.000Z">2026-08-30</time><span aria-hidden="true"> / </span><a href="/tags/Docker/">Docker</a><span aria-hidden="true"> · </span><a href="/tags/Redis/">Redis</a></div>
+    <p class="article-description">通过验证码示例理解 Redis 的读写和过期机制，再学习 Docker 的核心概念与常用命令。</p>
+  </header>
+  <div class="post-content"><h2 id="一、知识点"><a href="#一、知识点" class="headerlink" title="一、知识点"></a>一、知识点</h2><h3 id="【1】网络中的上行速率和下行速率"><a href="#【1】网络中的上行速率和下行速率" class="headerlink" title="【1】网络中的上行速率和下行速率"></a>【1】网络中的上行速率和下行速率</h3><ul>
+<li>下行速率（Download）：数据从网络流向自己的设备的速度</li>
+<li>上行速率（Upload）：数据从自己的设备流向网络的速度</li>
+<li>平时大部分时间是在接受从网络流向自己的数据，所以家里带宽的下行速率通常远大于上行速率。</li>
+<li>“500M 宽带”，往往指下行 500Mbps，而上行可能只有 50Mbps左右。</li>
+</ul>
+<h3 id="【2】文件下载速度和硬盘读写速度、"><a href="#【2】文件下载速度和硬盘读写速度、" class="headerlink" title="【2】文件下载速度和硬盘读写速度、"></a>【2】文件下载速度和硬盘读写速度、</h3><p>文件下载速度要小于硬盘写入速度。</p>
+<p>why？</p>
+<p>下载文件：网络 → 内存（缓冲区）→ 硬盘</p>
+<p>如果硬盘的读写速度跟不上文件的下载速度，就会导致下载的文件在内存缓冲区堆积，下载速度就会变慢。</p>
+<h3 id="【3】关系数据库和内存数据库"><a href="#【3】关系数据库和内存数据库" class="headerlink" title="【3】关系数据库和内存数据库"></a>【3】关系数据库和内存数据库</h3><h4 id="1、内存数据库是什么？"><a href="#1、内存数据库是什么？" class="headerlink" title="1、内存数据库是什么？"></a>1、内存数据库是什么？</h4><ul>
+<li>关系数据库就是把数据存放成二维表</li>
+<li>内存数据库就是把数据存在内存（RAM）里，而不是磁盘上的数据库</li>
+</ul>
+<p>内存数据库就是拿”快但易失”来换极致的读写速度。常见的有 <strong>Redis</strong>、Memcached 等。</p>
+<h4 id="2、为什么要有内存数据库？"><a href="#2、为什么要有内存数据库？" class="headerlink" title="2、为什么要有内存数据库？"></a>2、为什么要有内存数据库？</h4><p>比如一个网页要展示商品实时库存，如果每次都去硬盘里读数据，就会很慢。放在内存数据库里面，会快很多很多。</p>
+<h4 id="3、内存数据库怎么用？"><a href="#3、内存数据库怎么用？" class="headerlink" title="3、内存数据库怎么用？"></a>3、内存数据库怎么用？</h4><p>连接 → 存 → 取</p>
+<ol>
+<li>装一个内存数据库，比如Redis</li>
+<li>连接 Redis</li>
+<li>从 Redis 里面读数据，如果查不到，再从 MySQL 里面查，查完之后顺便写入 Redis。（有点类似于 cache）</li>
+</ol>
+<h3 id="【4】Windows-分屏终端"><a href="#【4】Windows-分屏终端" class="headerlink" title="【4】Windows 分屏终端"></a>【4】Windows 分屏终端</h3><ul>
+<li><p>Alt + Shift + &#x3D;：左右分屏（垂直拆分）</p>
+</li>
+<li><p>Alt + Shift + -：上下分屏（水平拆分）</p>
+</li>
+<li><p>Alt + 方向键：在分屏之间切换</p>
+</li>
+<li><p>exit 回车退出分屏</p>
+</li>
+</ul>
+<h2 id="二、Redis-使用"><a href="#二、Redis-使用" class="headerlink" title="二、Redis 使用"></a>二、Redis 使用</h2><p>真实场景案例：</p>
+<p><strong>登录验证码。</strong></p>
+<p>流程是：用户点”发送验证码” → 后端生成 6 位随机数 → 存进 Redis，5 分钟有效 → 用户提交后去 Redis 比对。</p>
+<p>用它能把 Redis 的<strong>写入、读取、过期</strong>一次性全演示到。</p>
+<p>下面以 Windows 为例：</p>
+<h3 id="第一步：安装并启动-Redis"><a href="#第一步：安装并启动-Redis" class="headerlink" title="第一步：安装并启动 Redis"></a>第一步：安装并启动 Redis</h3><p>Redis 官方不支持 Windows 原生，最省事的方式是 Docker</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 拉取镜像并后台运行，把容器的 6379 端口映射到本机</span></span><br><span class="line">docker run --name myredis -d -p 6379:6379 redis:7</span><br></pre></td></tr></table></figure>
+
+<p>运行完验证：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker ps</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="第二步：连上-Redis"><a href="#第二步：连上-Redis" class="headerlink" title="第二步：连上 Redis"></a>第二步：连上 Redis</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 进入容器里的命令行客户端</span></span><br><span class="line">docker <span class="built_in">exec</span> -it myredis redis-cli</span><br></pre></td></tr></table></figure>
+
+
+
+<p>场景模拟：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 1. 模拟&quot;发送验证码&quot;：存验证码，EX 300 表示 300 秒后自动过期</span></span><br><span class="line">SET phone:13800001234:code 583920 EX 300</span><br><span class="line"><span class="comment"># 返回 OK</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 模拟&quot;用户提交验证码&quot;：取出来比对</span></span><br><span class="line">GET phone:13800001234:code</span><br><span class="line"><span class="comment"># 返回 &quot;583920&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 查看还剩多久过期</span></span><br><span class="line">TTL phone:13800001234:code</span><br><span class="line"><span class="comment"># 返回剩余秒数，比如 241</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 4. 验证通过后删掉（防止重复使用）</span></span><br><span class="line">DEL phone:13800001234:code</span><br><span class="line"></span><br><span class="line"><span class="comment"># 5. 超过 5 分钟再来取，已经没了（这就是 Redis 自动过期的效果）</span></span><br><span class="line">GET phone:13800001234:code</span><br><span class="line"><span class="comment"># 返回 (nil)</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="第三步：代码里真正调用（Python-示例）"><a href="#第三步：代码里真正调用（Python-示例）" class="headerlink" title="第三步：代码里真正调用（Python 示例）"></a>第三步：代码里真正调用（Python 示例）</h3><p>先装客户端库：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install redis</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后写代码（存成 verify.py）：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> random</span><br><span class="line"><span class="keyword">import</span> redis</span><br><span class="line"></span><br><span class="line"><span class="comment"># 连接本机的 Redis（6379 是默认端口，decode_responses 让返回的是字符串而不是字节）</span></span><br><span class="line">r = redis.Redis(host=<span class="string">&#x27;localhost&#x27;</span>, port=<span class="number">6379</span>, decode_responses=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">send_code</span>(<span class="params">phone: <span class="built_in">str</span></span>) -&gt; <span class="built_in">str</span>:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;发送验证码：生成 6 位随机数，存进 Redis，5 分钟有效&quot;&quot;&quot;</span></span><br><span class="line">    code = <span class="string">f&quot;<span class="subst">&#123;random.randint(<span class="number">0</span>, <span class="number">999999</span>):06d&#125;</span>&quot;</span>  <span class="comment"># 生成 583920 这样的 6 位数</span></span><br><span class="line">    key = <span class="string">f&quot;phone:<span class="subst">&#123;phone&#125;</span>:code&quot;</span></span><br><span class="line">    r.<span class="built_in">set</span>(key, code, ex=<span class="number">300</span>)  <span class="comment"># 等价于 SET key code EX 300</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;已向 <span class="subst">&#123;phone&#125;</span> 发送验证码：<span class="subst">&#123;code&#125;</span>（5 分钟内有效）&quot;</span>)</span><br><span class="line">    <span class="keyword">return</span> code</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">check_code</span>(<span class="params">phone: <span class="built_in">str</span>, user_input: <span class="built_in">str</span></span>) -&gt; <span class="built_in">bool</span>:</span><br><span class="line">    <span class="string">&quot;&quot;&quot;校验验证码：取出比对，无论对错都删掉（只允许试一次）&quot;&quot;&quot;</span></span><br><span class="line">    key = <span class="string">f&quot;phone:<span class="subst">&#123;phone&#125;</span>:code&quot;</span></span><br><span class="line">    saved = r.get(key)  <span class="comment"># 等价于 GET key，不存在返回 None</span></span><br><span class="line">    r.delete(key)  <span class="comment"># 等价于 DEL key</span></span><br><span class="line">    <span class="keyword">return</span> saved <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span> <span class="keyword">and</span> saved == user_input</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    phone = <span class="string">&quot;13800001234&quot;</span></span><br><span class="line">    send_code(phone)  <span class="comment"># 第一步：发码</span></span><br><span class="line">    code = <span class="built_in">input</span>(<span class="string">&quot;请输入收到的验证码：&quot;</span>)  <span class="comment"># 第二步：假装你是用户，把打印出来的码敲进去</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;验证通过！&quot;</span> <span class="keyword">if</span> check_code(phone, code) <span class="keyword">else</span> <span class="string">&quot;验证码错误或已过期&quot;</span>)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<p>执行：（或者直接在 PyCharm 中执行）</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python verify.py</span><br></pre></td></tr></table></figure>
+
+
+
+<p>执行结果：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">已向 13800001234 发送验证码：881748（5 分钟内有效）</span><br><span class="line">请输入收到的验证码：881748</span><br><span class="line">验证通过！</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="三、Docker-使用"><a href="#三、Docker-使用" class="headerlink" title="三、Docker 使用"></a>三、Docker 使用</h2><h3 id="【1】Docker-是什么？"><a href="#【1】Docker-是什么？" class="headerlink" title="【1】Docker 是什么？"></a>【1】Docker 是什么？</h3><p>Docker 是一个<strong>容器</strong>，可以把程序和它所需要的环境打包在一起。</p>
+<p>Docker 的思路是：软件的发布者提前把整个软件 + 它依赖的一切（操作系统环境、运行库、配置文件）打包成一个标准包裹，叫<strong>镜像</strong>（Image）。你拿到这个包裹，Docker帮你开箱即用地跑起来，你不用关心它依赖什么，也不用装任何东西。</p>
+<h3 id="【2】为什么要用-Docker-？解决什么问题？"><a href="#【2】为什么要用-Docker-？解决什么问题？" class="headerlink" title="【2】为什么要用 Docker ？解决什么问题？"></a>【2】为什么要用 Docker ？解决什么问题？</h3><p><strong>问题：</strong></p>
+<p>开发者的电脑上环境是 A，测试服务器环境是 B，线上服务器环境是 C。程序在 A 上跑得好好的，到 C 上就崩，因为缺个运行库、版本差半号、配置不一样……</p>
+<p><strong>解决方案：</strong></p>
+<p>Docker 让开发、测试、生产跑的是同一个镜像，环境完全一致，消灭”环境不一致”这个变量。</p>
+<p><strong>作用</strong>：</p>
+<ol>
+<li><p>告别 “在我电脑上明明能跑”。</p>
+</li>
+<li><p>隔离。每个容器都是独立的小箱子，互相不干扰。</p>
+</li>
+<li><p>轻、快、省。Docker 容器很轻，启动是秒级的；虚拟机启动要好几分钟。</p>
+</li>
+</ol>
+<h3 id="【3】Docker-能用来做什么？什么场景用？"><a href="#【3】Docker-能用来做什么？什么场景用？" class="headerlink" title="【3】Docker 能用来做什么？什么场景用？"></a>【3】Docker 能用来做什么？什么场景用？</h3><p>1、跑数据库，不用在本机装。</p>
+<p>学 Redis，在 Windows 或虚拟机里手动装、配、折腾，用一条命令 docker run redis 就可以完成，用完删除即可</p>
+<p>2、部署网站和 Web 服务。</p>
+<p>把写好的网站打包成容器，推到服务器上，一条命令就可以部署好，服务器崩溃换一台，拉下来再跑，只需要几秒</p>
+<p>3、学习新软件、搭实验环境。</p>
+<p>想试试新工具，开个容器，用完删掉，完全不污染自己的系统。</p>
+<p>4、多服务一整套启动。</p>
+<p>比如一个项目要 “网站 + 数据库 + 缓存” 三个东西，用 docker-compose 一条命令全给你拉起来。</p>
+<h3 id="【4】Docker-怎么用？"><a href="#【4】Docker-怎么用？" class="headerlink" title="【4】Docker 怎么用？"></a>【4】Docker 怎么用？</h3><p><strong>核心命令：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">docker run --name myredis -d -p 6379:6379 redis:7</span><br><span class="line"></span><br><span class="line">docker <span class="built_in">exec</span> -it myredis redis-cli</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>docker run：启动一个容器</li>
+<li>–name myredis：给这个容器起个名字，以后好管理</li>
+<li>-d：后台运行（detached），不然它会占住终端</li>
+<li>-p 6379:6379：端口映射，”宿主机端口:容器端口”。容器是个隔离的小环境，里面的 6379 外面访问不到，映射一下，访问本机 6379 就等于访问容器的 6379</li>
+<li>redis:7：镜像名:版本号。redis 是镜像，7 是标签（版本）。不写版本默认 latest</li>
+</ul>
+<p><strong>三个核心概念:</strong></p>
+<p>镜像（Image）</p>
+<p>容器（Container）：镜像跑起来的实例。一个镜像可以开出无数个容器。</p>
+<p>Docker Hub：官方的镜像仓库网站（hub.docker.com）</p>
+<p>Docker Compose：一个编排工具，用一个 YAML 文件定义”一组容器”（比如”项目 &#x3D; Web 容器 + 数据库容器 + Redis 容器”），一条 docker compose up 全部拉起。</p>
+<p>Daemon（守护进程）：Docker 的幕后服务，Docker Desktop 启动时它就活了。</p>
+<p><strong>其他日常命令：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">docker ps              <span class="comment"># 看正在运行的容器</span></span><br><span class="line">docker ps -a           <span class="comment"># 看所有容器（包括已停止的）</span></span><br><span class="line">docker logs myredis    <span class="comment"># 看某个容器的日志</span></span><br><span class="line">docker <span class="built_in">exec</span> -it myredis redis-cli   <span class="comment"># 进容器里执行命令</span></span><br><span class="line">docker stop myredis    <span class="comment"># 停止</span></span><br><span class="line">docker start myredis   <span class="comment"># 再启动（数据还在）</span></span><br><span class="line">docker <span class="built_in">rm</span> myredis      <span class="comment"># 删除容器</span></span><br><span class="line">docker pull nginx      <span class="comment"># 只下载镜像不运行</span></span><br><span class="line">docker images          <span class="comment"># 看本机有哪些镜像</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h3 id="【5】Docker-真实场景案例"><a href="#【5】Docker-真实场景案例" class="headerlink" title="【5】Docker 真实场景案例"></a>【5】Docker 真实场景案例</h3><p><strong>用 Docker 瞬间架起一个网站：</strong></p>
+<p>验证：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker version</span><br></pre></td></tr></table></figure>
+
+<p>一条命令，建一个网站：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d --name myweb -p 8080:80 nginx</span><br></pre></td></tr></table></figure>
+
+<p>浏览器地址栏输入：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://localhost:8080</span><br></pre></td></tr></table></figure>
+
+<p>换成自己的网页：</p>
+<p>目录新建一个 index.html</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">h1</span>&gt;</span>欢迎来到我的第一个 Docker 世界<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>然后执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">docker run -d --name myweb2 -p 8081:80 -v %<span class="built_in">cd</span>%:/usr/share/nginx/html nginx</span><br><span class="line"><span class="comment"># 或者</span></span><br><span class="line">docker run -d --name myweb2 -p 8081:80 -v $(<span class="built_in">pwd</span>):/usr/share/nginx/html nginx</span><br></pre></td></tr></table></figure>
+
+<p>访问：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://localhost:8081</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker stop myweb myweb2   <span class="comment"># 停止</span></span><br><span class="line">docker <span class="built_in">rm</span> myweb myweb2     <span class="comment"># 删除</span></span><br></pre></td></tr></table></figure>
+</div>
+  <nav class="article-end" aria-label="继续阅读"><a href="/topics/">浏览学习专题 <span aria-hidden="true">↗</span></a><a href="#main-content">回到顶部 ↑</a></nav>
+</article>
+
+</div>
+</main>
+
+<footer class="footer linx-footer">
+  <span>记录学习的过程，也记录慢慢想明白的事。</span>
+  <span><a href="https://github.com/dubingjie" target="_blank" rel="noopener noreferrer">GitHub</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://github.com/wu3227834/hexo-theme-aerlume">Aerlume</a></span>
+</footer>
+
+
+<script src="/js/linx.js" defer data-root="/" data-search="/search.json"></script>
+
+<script src="/js/clipboard.js" defer></script>
+<script src="/js/lightbox.js" defer></script>
+
+</body>
+</html>

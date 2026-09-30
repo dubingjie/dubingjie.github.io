@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>迭代器 · 生成器 · LinX的世界</title>
+  <meta name="description" content="对比可迭代对象、迭代器与生成器，整理 iter、next、yield、send 和生成器自动启动装饰器的用法。">
+  <link rel="canonical" href="https://dubingjie.github.io/2026/09/30/python-iterators-generators/">
+  <meta property="og:title" content="迭代器 · 生成器 · LinX的世界">
+  <meta property="og:description" content="对比可迭代对象、迭代器与生成器，整理 iter、next、yield、send 和生成器自动启动装饰器的用法。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dubingjie.github.io/2026/09/30/python-iterators-generators/">
+  <meta property="og:site_name" content="LinX的世界">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  
+<link rel="stylesheet" href="/css/aerlume.css">
+
+  <style>@font-face{font-family:'Aerlume Local';src:url('/fonts/TsangerYuYangT_W03_W03.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}:root{--aerlume-local-font:'Aerlume Local'}</style>
+  
+<link rel="stylesheet" href="/css/linx.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="reading-page">
+<a class="skip-link" href="#main-content">跳到正文</a>
+
+  <main class="reading-shell" id="main-content">
+<div class="reading-tools">
+  <a class="reading-back" data-reading-back href="/"><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18"/></svg><span>返回</span></a>
+</div>
+<div class="article-reading-layout has-toc">
+  
+  <details class="reading-toc" id="reading-toc" open>
+    <summary><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="toc-open-label">目录</span><span class="toc-hide-label">隐藏 ←</span><span class="toc-show-label">目录 →</span></summary>
+    <nav class="reading-toc-panel" aria-label="文章目录"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BF%AD%E4%BB%A3%E5%99%A8-%C2%B7-%E7%94%9F%E6%88%90%E5%99%A8"><span class="toc-text">迭代器 · 生成器</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%8F%AF%E8%BF%AD%E4%BB%A3%E5%AF%B9%E8%B1%A1-vs-%E8%BF%AD%E4%BB%A3%E5%99%A8%E5%AF%B9%E8%B1%A1"><span class="toc-text">一、可迭代对象 vs 迭代器对象</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E9%80%9A%E4%BF%97%E7%B1%BB%E6%AF%94"><span class="toc-text">1. 通俗类比</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%8F%AF%E8%BF%AD%E4%BB%A3%E5%AF%B9%E8%B1%A1%EF%BC%88Iterable%EF%BC%89"><span class="toc-text">2. 可迭代对象（Iterable）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E8%BF%AD%E4%BB%A3%E5%99%A8%E5%AF%B9%E8%B1%A1%EF%BC%88Iterator%EF%BC%89"><span class="toc-text">3. 迭代器对象（Iterator）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E4%BD%93%E9%AA%8C"><span class="toc-text">4. 体验</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-for-%E5%BE%AA%E7%8E%AF%E5%86%85%E9%83%A8%E5%81%9A%E4%BA%86%E4%BB%80%E4%B9%88"><span class="toc-text">5. for 循环内部做了什么</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-%E4%B8%A4%E8%80%85%E5%85%B3%E7%B3%BB"><span class="toc-text">6. 两者关系</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-%E5%AF%B9%E6%AF%94%E8%A1%A8"><span class="toc-text">7. 对比表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-%E8%BF%AD%E4%BB%A3%E5%99%A8%E6%98%AF%E4%B8%80%E6%AC%A1%E6%80%A7%E7%9A%84%EF%BC%81%EF%BC%81"><span class="toc-text">8. 迭代器是一次性的！！</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-%E8%87%AA%E5%B7%B1%E9%80%A0%E4%B8%80%E4%B8%AA"><span class="toc-text">9. 自己造一个</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-%E6%80%BB%E7%BB%93"><span class="toc-text">10. 总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E7%94%9F%E6%88%90%E5%99%A8%EF%BC%88Generator%EF%BC%89"><span class="toc-text">二、生成器（Generator）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E9%80%9A%E4%BF%97%E7%B1%BB%E6%AF%94-1"><span class="toc-text">1. 通俗类比</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E7%94%9F%E6%88%90%E5%99%A8%E6%98%AF%E4%BB%80%E4%B9%88"><span class="toc-text">2. 生成器是什么</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%88%9B%E5%BB%BA%E6%96%B9%E5%BC%8F%E4%B8%80%EF%BC%9A%E7%94%9F%E6%88%90%E5%99%A8%E5%87%BD%E6%95%B0"><span class="toc-text">3. 创建方式一：生成器函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%88%9B%E5%BB%BA%E6%96%B9%E5%BC%8F%E4%BA%8C%EF%BC%9A%E7%94%9F%E6%88%90%E5%99%A8%E8%A1%A8%E8%BE%BE%E5%BC%8F"><span class="toc-text">4. 创建方式二：生成器表达式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-yield-%E5%88%B0%E5%BA%95%E5%81%9A%E4%BA%86%E4%BB%80%E4%B9%88"><span class="toc-text">5. yield 到底做了什么</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-%E4%B8%BA%E4%BB%80%E4%B9%88%E7%94%A8%E7%94%9F%E6%88%90%E5%99%A8%EF%BC%9A%E7%9C%81%E5%86%85%E5%AD%98"><span class="toc-text">6. 为什么用生成器：省内存</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-%E7%BB%8F%E5%85%B8%E4%BE%8B%E5%AD%90%EF%BC%9A%E6%96%90%E6%B3%A2%E9%82%A3%E5%A5%91"><span class="toc-text">7. 经典例子：斐波那契</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-%E4%B8%A4%E4%B8%AA%E5%B8%B8%E7%94%A8%E6%96%B9%E6%B3%95"><span class="toc-text">8. 两个常用方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-%E7%89%B9%E7%82%B9%E6%80%BB%E7%BB%93"><span class="toc-text">9. 特点总结</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="toc-text">10. 使用场景</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#11-%E5%AF%B9%E6%AF%94%E8%A1%A8"><span class="toc-text">11. 对比表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#12-%E6%80%BB%E7%BB%93"><span class="toc-text">12. 总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E7%94%9F%E6%88%90%E5%99%A8%E7%9A%84%E4%B8%A4%E7%A7%8D%E8%B0%83%E7%94%A8%E6%96%B9%E5%BC%8F"><span class="toc-text">三、生成器的两种调用方式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E6%89%8B%E5%8A%A8%E8%B0%83%E7%94%A8"><span class="toc-text">1. 手动调用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E7%94%A8%E8%A3%85%E9%A5%B0%E5%99%A8%E8%B0%83%E7%94%A8"><span class="toc-text">2. 用装饰器调用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%AF%B9%E6%AF%94%E8%A1%A8"><span class="toc-text">3. 对比表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E6%80%BB%E7%BB%93"><span class="toc-text">4. 总结</span></a></li></ol></li></ol></li></ol></nav>
+  </details>
+  
+<article class="post-container">
+  <header class="article-header">
+    <a class="article-category" href="/topics/#python">Python</a>
+    <h1 class="post-title">迭代器 · 生成器</h1>
+    <div class="post-meta"><time datetime="2026-09-30T00:00:00.000Z">2026-09-30</time><span aria-hidden="true"> / </span><a href="/tags/Python/">Python</a><span aria-hidden="true"> · </span><a href="/tags/%E7%94%9F%E6%88%90%E5%99%A8/">生成器</a><span aria-hidden="true"> · </span><a href="/tags/%E8%BF%AD%E4%BB%A3%E5%99%A8/">迭代器</a><span aria-hidden="true"> · </span><a href="/tags/%E8%A3%85%E9%A5%B0%E5%99%A8/">装饰器</a></div>
+    <p class="article-description">对比可迭代对象、迭代器与生成器，整理 iter、next、yield、send 和生成器自动启动装饰器的用法。</p>
+  </header>
+  <div class="post-content"><h1 id="迭代器-·-生成器"><a href="#迭代器-·-生成器" class="headerlink" title="迭代器 · 生成器"></a>迭代器 · 生成器</h1><h2 id="一、可迭代对象-vs-迭代器对象"><a href="#一、可迭代对象-vs-迭代器对象" class="headerlink" title="一、可迭代对象 vs 迭代器对象"></a>一、可迭代对象 vs 迭代器对象</h2><h3 id="1-通俗类比"><a href="#1-通俗类比" class="headerlink" title="1. 通俗类比"></a>1. 通俗类比</h3><ul>
+<li><strong>可迭代对象（Iterable）</strong> &#x3D; 一本可以翻的书</li>
+<li><strong>迭代器（Iterator）</strong> &#x3D; 一个会自己翻页的书签</li>
+</ul>
+<p>书本身不会自己翻页，你得找个书签帮你翻。书签记得”我翻到第几页了”。</p>
+<h3 id="2-可迭代对象（Iterable）"><a href="#2-可迭代对象（Iterable）" class="headerlink" title="2. 可迭代对象（Iterable）"></a>2. 可迭代对象（Iterable）</h3><p><strong>能被 <code>for</code> 循环遍历的东西，都是可迭代对象。</strong></p>
+<p>常见例子：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">列表 [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line">字符串 <span class="string">&quot;abc&quot;</span></span><br><span class="line">元组 (<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)</span><br><span class="line">字典 &#123;<span class="string">&quot;a&quot;</span>: <span class="number">1</span>&#125;</span><br><span class="line">集合 &#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>&#125;</span><br><span class="line"><span class="built_in">range</span>(<span class="number">5</span>)</span><br><span class="line">文件对象 <span class="built_in">open</span>(<span class="string">&quot;a.txt&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>判断方法：看有没有 <code>__iter__()</code> 方法。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">nums = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">hasattr</span>(nums, <span class="string">&#x27;__iter__&#x27;</span>))   <span class="comment"># True</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="3-迭代器对象（Iterator）"><a href="#3-迭代器对象（Iterator）" class="headerlink" title="3. 迭代器对象（Iterator）"></a>3. 迭代器对象（Iterator）</h3><p><strong>既能被 <code>for</code> 遍历，又能用 <code>next()</code> 一个一个取值的对象。</strong></p>
+<p>两个核心方法：</p>
+<table>
+<thead>
+<tr>
+<th align="left">方法</th>
+<th align="left">作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>__iter__()</code></td>
+<td align="left">返回自己</td>
+</tr>
+<tr>
+<td align="left"><code>__next__()</code></td>
+<td align="left">返回下一个值，取完抛 <code>StopIteration</code></td>
+</tr>
+</tbody></table>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">nums = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line">it = <span class="built_in">iter</span>(nums)</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">hasattr</span>(it, <span class="string">&#x27;__next__&#x27;</span>))   <span class="comment"># True</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="4-体验"><a href="#4-体验" class="headerlink" title="4. 体验"></a>4. 体验</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">nums = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line">it = <span class="built_in">iter</span>(nums)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">next</span>(it))         <span class="comment"># 1</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">next</span>(it))         <span class="comment"># 2</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">next</span>(it))         <span class="comment"># 3</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">next</span>(it))         <span class="comment"># 抛异常 StopIteration</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="5-for-循环内部做了什么"><a href="#5-for-循环内部做了什么" class="headerlink" title="5. for 循环内部做了什么"></a>5. for 循环内部做了什么</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> x <span class="keyword">in</span> [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]:</span><br><span class="line">    <span class="built_in">print</span>(x)</span><br></pre></td></tr></table></figure>
+
+<p>等价于：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">it = <span class="built_in">iter</span>([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>])</span><br><span class="line"><span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        x = <span class="built_in">next</span>(it)</span><br><span class="line">        <span class="built_in">print</span>(x)</span><br><span class="line">    <span class="keyword">except</span> StopIteration:</span><br><span class="line">        <span class="keyword">break</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="6-两者关系"><a href="#6-两者关系" class="headerlink" title="6. 两者关系"></a>6. 两者关系</h3><blockquote>
+<p>可迭代对象 ≠ 迭代器，但迭代器一定是可迭代对象。</p>
+</blockquote>
+<h3 id="7-对比表"><a href="#7-对比表" class="headerlink" title="7. 对比表"></a>7. 对比表</h3><table>
+<thead>
+<tr>
+<th align="left">特性</th>
+<th align="left">可迭代对象</th>
+<th align="left">迭代器</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">能被 <code>for</code> 遍历</td>
+<td align="left">✅</td>
+<td align="left">✅</td>
+</tr>
+<tr>
+<td align="left">有 <code>__iter__()</code></td>
+<td align="left">✅</td>
+<td align="left">✅</td>
+</tr>
+<tr>
+<td align="left">有 <code>__next__()</code></td>
+<td align="left">❌</td>
+<td align="left">✅</td>
+</tr>
+<tr>
+<td align="left">能 <code>next()</code> 取值</td>
+<td align="left">❌</td>
+<td align="left">✅</td>
+</tr>
+<tr>
+<td align="left">记住遍历位置</td>
+<td align="left">❌</td>
+<td align="left">✅</td>
+</tr>
+<tr>
+<td align="left">能重复遍历</td>
+<td align="left">✅</td>
+<td align="left">❌（一次性）</td>
+</tr>
+<tr>
+<td align="left">例子</td>
+<td align="left">列表、字符串、字典</td>
+<td align="left"><code>iter([1,2,3])</code>、生成器</td>
+</tr>
+</tbody></table>
+<h3 id="8-迭代器是一次性的！！"><a href="#8-迭代器是一次性的！！" class="headerlink" title="8. 迭代器是一次性的！！"></a>8. 迭代器是一次性的！！</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">nums = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line">it = <span class="built_in">iter</span>(nums)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">list</span>(it))   <span class="comment"># [1, 2, 3]</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">list</span>(it))   <span class="comment"># []  ← 空了</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="9-自己造一个"><a href="#9-自己造一个" class="headerlink" title="9. 自己造一个"></a>9. 自己造一个</h3><p><strong>可迭代对象：</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">MyList</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, data</span>):</span><br><span class="line">        <span class="variable language_">self</span>.data = data</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__iter__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">iter</span>(<span class="variable language_">self</span>.data)</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> x <span class="keyword">in</span> MyList([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]):</span><br><span class="line">    <span class="built_in">print</span>(x)   <span class="comment"># 1 2 3</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>迭代器：</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Counter</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, n</span>):</span><br><span class="line">        <span class="variable language_">self</span>.n = n</span><br><span class="line">        <span class="variable language_">self</span>.i = <span class="number">0</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__iter__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="variable language_">self</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__next__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">if</span> <span class="variable language_">self</span>.i &gt;= <span class="variable language_">self</span>.n:</span><br><span class="line">            <span class="keyword">raise</span> StopIteration</span><br><span class="line">        <span class="variable language_">self</span>.i += <span class="number">1</span></span><br><span class="line">        <span class="keyword">return</span> <span class="variable language_">self</span>.i</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> x <span class="keyword">in</span> Counter(<span class="number">3</span>):</span><br><span class="line">    <span class="built_in">print</span>(x)   <span class="comment"># 1 2 3</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="10-总结"><a href="#10-总结" class="headerlink" title="10. 总结"></a>10. 总结</h3><blockquote>
+<p>可迭代对象 &#x3D; 能被遍历的东西（书）<br>迭代器 &#x3D; 能被遍历 + 会自己往下走 + 一次性（书签）<br>可迭代是”资格”，迭代器是”能力”。</p>
+</blockquote>
+<hr>
+<h2 id="二、生成器（Generator）"><a href="#二、生成器（Generator）" class="headerlink" title="二、生成器（Generator）"></a>二、生成器（Generator）</h2><h3 id="1-通俗类比-1"><a href="#1-通俗类比-1" class="headerlink" title="1. 通俗类比"></a>1. 通俗类比</h3><ul>
+<li>普通函数 &#x3D; 一次性把菜全做完端上来（列表）</li>
+<li>生成器 &#x3D; 现做现上，你吃一口我做一道</li>
+</ul>
+<h3 id="2-生成器是什么"><a href="#2-生成器是什么" class="headerlink" title="2. 生成器是什么"></a>2. 生成器是什么</h3><p><strong>生成器是一种特殊的迭代器。</strong></p>
+<p>特点：</p>
+<ol>
+<li>用 <code>yield</code> 代替 <code>return</code></li>
+<li>不会一次性算完，而是”要一个给一个”（惰性求值）</li>
+</ol>
+<p>一句话：生成器 &#x3D; 会”暂停”的函数 + 自动成为迭代器。</p>
+<h3 id="3-创建方式一：生成器函数"><a href="#3-创建方式一：生成器函数" class="headerlink" title="3. 创建方式一：生成器函数"></a>3. 创建方式一：生成器函数</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">make_gen</span>():</span><br><span class="line">    <span class="keyword">yield</span> <span class="number">1</span></span><br><span class="line">    <span class="keyword">yield</span> <span class="number">2</span></span><br><span class="line">    <span class="keyword">yield</span> <span class="number">3</span></span><br><span class="line"></span><br><span class="line">g = make_gen()</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">next</span>(g))   <span class="comment"># 1</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">next</span>(g))   <span class="comment"># 2</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">next</span>(g))   <span class="comment"># 3</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">next</span>(g))   <span class="comment"># StopIteration</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 或用 for</span></span><br><span class="line"><span class="keyword">for</span> x <span class="keyword">in</span> make_gen():</span><br><span class="line">    <span class="built_in">print</span>(x)     <span class="comment"># 1 2 3</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="4-创建方式二：生成器表达式"><a href="#4-创建方式二：生成器表达式" class="headerlink" title="4. 创建方式二：生成器表达式"></a>4. 创建方式二：生成器表达式</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">nums = (x * <span class="number">2</span> <span class="keyword">for</span> x <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">5</span>))   <span class="comment"># 圆括号</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">next</span>(nums))   <span class="comment"># 0</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">next</span>(nums))   <span class="comment"># 2</span></span><br></pre></td></tr></table></figure>
+
+<p>记忆点：</p>
+<ul>
+<li><code>[]</code> → 列表推导式 → 全部算完</li>
+<li><code>()</code> → 生成器表达式 → 用到才算</li>
+</ul>
+<h3 id="5-yield-到底做了什么"><a href="#5-yield-到底做了什么" class="headerlink" title="5. yield 到底做了什么"></a>5. yield 到底做了什么</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">demo</span>():</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;开始&quot;</span>)</span><br><span class="line">    <span class="keyword">yield</span> <span class="number">1</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;继续&quot;</span>)</span><br><span class="line">    <span class="keyword">yield</span> <span class="number">2</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;结束&quot;</span>)</span><br><span class="line"></span><br><span class="line">g = demo()</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;=== 还没执行 ===&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">next</span>(g))</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;=== 第一次暂停后 ===&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">next</span>(g))</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;=== 第二次暂停后 ===&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">next</span>(g))</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">=== 还没执行 ===</span><br><span class="line">开始</span><br><span class="line">1</span><br><span class="line">=== 第一次暂停后 ===</span><br><span class="line">继续</span><br><span class="line">2</span><br><span class="line">=== 第二次暂停后 ===</span><br><span class="line">结束</span><br><span class="line">StopIteration</span><br></pre></td></tr></table></figure>
+
+<p><strong>yield &#x3D; 暂停 + 返回值 + 记住现场。</strong></p>
+<h3 id="6-为什么用生成器：省内存"><a href="#6-为什么用生成器：省内存" class="headerlink" title="6. 为什么用生成器：省内存"></a>6. 为什么用生成器：省内存</h3><p><strong>用列表（爆内存）：</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">make_nums</span>():</span><br><span class="line">    result = []</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">100000000</span>):</span><br><span class="line">        result.append(i)</span><br><span class="line">    <span class="keyword">return</span> result</span><br></pre></td></tr></table></figure>
+
+<p><strong>用生成器（无压力）：</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">make_nums</span>():</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">100000000</span>):</span><br><span class="line">        <span class="keyword">yield</span> i</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> n <span class="keyword">in</span> make_nums():</span><br><span class="line">    <span class="built_in">print</span>(n)</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-经典例子：斐波那契"><a href="#7-经典例子：斐波那契" class="headerlink" title="7. 经典例子：斐波那契"></a>7. 经典例子：斐波那契</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">fib_gen</span>(<span class="params">n</span>):</span><br><span class="line">    a, b = <span class="number">0</span>, <span class="number">1</span></span><br><span class="line">    <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(n):</span><br><span class="line">        <span class="keyword">yield</span> a</span><br><span class="line">        a, b = b, a + b</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> x <span class="keyword">in</span> fib_gen(<span class="number">10</span>):</span><br><span class="line">    <span class="built_in">print</span>(x)   <span class="comment"># 0 1 1 2 3 5 8 13 21 34</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="8-两个常用方法"><a href="#8-两个常用方法" class="headerlink" title="8. 两个常用方法"></a>8. 两个常用方法</h3><p><strong>send()：给生成器发值</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">demo</span>():</span><br><span class="line">    x = <span class="keyword">yield</span> <span class="number">1</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;收到：&quot;</span>, x)</span><br><span class="line">    y = <span class="keyword">yield</span> <span class="number">2</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;收到：&quot;</span>, y)</span><br><span class="line"></span><br><span class="line">g = demo()</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">next</span>(g))       <span class="comment"># 1</span></span><br><span class="line"><span class="built_in">print</span>(g.send(<span class="number">100</span>))   <span class="comment"># 收到：100 → 2</span></span><br><span class="line"><span class="built_in">print</span>(g.send(<span class="number">200</span>))   <span class="comment"># 收到：200 → StopIteration</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>close()：关闭生成器</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">g = demo()</span><br><span class="line"><span class="built_in">next</span>(g)</span><br><span class="line">g.close()</span><br></pre></td></tr></table></figure>
+
+<h3 id="9-特点总结"><a href="#9-特点总结" class="headerlink" title="9. 特点总结"></a>9. 特点总结</h3><table>
+<thead>
+<tr>
+<th align="left">特点</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">用 <code>yield</code> 定义</td>
+<td align="left">有 <code>yield</code> 就是生成器函数</td>
+</tr>
+<tr>
+<td align="left">惰性求值</td>
+<td align="left">用到才算</td>
+</tr>
+<tr>
+<td align="left">一次性</td>
+<td align="left">用完就没了</td>
+</tr>
+<tr>
+<td align="left">自动是迭代器</td>
+<td align="left">能用 <code>next()</code> 和 <code>for</code></td>
+</tr>
+<tr>
+<td align="left">状态保持</td>
+<td align="left">暂停后记住现场</td>
+</tr>
+</tbody></table>
+<h3 id="10-使用场景"><a href="#10-使用场景" class="headerlink" title="10. 使用场景"></a>10. 使用场景</h3><table>
+<thead>
+<tr>
+<th align="left">场景</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">数据量巨大</td>
+<td align="left">读 10G 日志，一行一行处理</td>
+</tr>
+<tr>
+<td align="left">无限序列</td>
+<td align="left">所有自然数</td>
+</tr>
+<tr>
+<td align="left">管道式处理</td>
+<td align="left">生成器套生成器</td>
+</tr>
+<tr>
+<td align="left">只要遍历一次</td>
+<td align="left">不需要保存全部数据</td>
+</tr>
+</tbody></table>
+<p><strong>实战：读大文件</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">read_big_file</span>(<span class="params">path</span>):</span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(path) <span class="keyword">as</span> f:</span><br><span class="line">        <span class="keyword">for</span> line <span class="keyword">in</span> f:</span><br><span class="line">            <span class="keyword">yield</span> line</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> line <span class="keyword">in</span> read_big_file(<span class="string">&quot;huge.log&quot;</span>):</span><br><span class="line">    process(line)</span><br></pre></td></tr></table></figure>
+
+<h3 id="11-对比表"><a href="#11-对比表" class="headerlink" title="11. 对比表"></a>11. 对比表</h3><table>
+<thead>
+<tr>
+<th align="left">对比项</th>
+<th align="left">列表</th>
+<th align="left">生成器</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">内存</td>
+<td align="left">全部存起来</td>
+<td align="left">只存当前</td>
+</tr>
+<tr>
+<td align="left">速度</td>
+<td align="left">全部算完才能用</td>
+<td align="left">边算边用</td>
+</tr>
+<tr>
+<td align="left">重复遍历</td>
+<td align="left">✅</td>
+<td align="left">❌</td>
+</tr>
+<tr>
+<td align="left">适用</td>
+<td align="left">数据小、反复用</td>
+<td align="left">数据大、只用一次</td>
+</tr>
+</tbody></table>
+<h3 id="12-总结"><a href="#12-总结" class="headerlink" title="12. 总结"></a>12. 总结</h3><blockquote>
+<p>有 <code>yield</code> 就是生成器函数，圆括号推导式就是生成器表达式。<br><code>yield</code> &#x3D; 暂停 + 返回值 + 记住现场。<br>生成器 &#x3D; 惰性求值 &#x3D; 要一个算一个 &#x3D; 省内存。</p>
+</blockquote>
+<hr>
+<h2 id="三、生成器的两种调用方式"><a href="#三、生成器的两种调用方式" class="headerlink" title="三、生成器的两种调用方式"></a>三、生成器的两种调用方式</h2><h3 id="1-手动调用"><a href="#1-手动调用" class="headerlink" title="1. 手动调用"></a>1. 手动调用</h3><p><strong>基础：用 next()</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">gen</span>():</span><br><span class="line">    <span class="keyword">yield</span> <span class="number">1</span></span><br><span class="line">    <span class="keyword">yield</span> <span class="number">2</span></span><br><span class="line">    <span class="keyword">yield</span> <span class="number">3</span></span><br><span class="line"></span><br><span class="line">g = gen()</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">next</span>(g))   <span class="comment"># 1</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">next</span>(g))   <span class="comment"># 2</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">next</span>(g))   <span class="comment"># 3</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">next</span>(g))   <span class="comment"># StopIteration</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>半自动：用 for</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> x <span class="keyword">in</span> gen():</span><br><span class="line">    <span class="built_in">print</span>(x)</span><br></pre></td></tr></table></figure>
+
+<p><strong>真正的手动：用 send() 双向通信</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">gen</span>():</span><br><span class="line">    <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">        x = <span class="keyword">yield</span></span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;收到：<span class="subst">&#123;x&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">g = gen()</span><br><span class="line"><span class="built_in">next</span>(g)              <span class="comment"># 先启动</span></span><br><span class="line">g.send(<span class="string">&quot;你好&quot;</span>)       <span class="comment"># 收到：你好</span></span><br><span class="line">g.send(<span class="string">&quot;世界&quot;</span>)       <span class="comment"># 收到：世界</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>典型场景：实时平均值</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">averager</span>():</span><br><span class="line">    total = <span class="number">0</span></span><br><span class="line">    count = <span class="number">0</span></span><br><span class="line">    avg = <span class="literal">None</span></span><br><span class="line">    <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">        x = <span class="keyword">yield</span> avg</span><br><span class="line">        total += x</span><br><span class="line">        count += <span class="number">1</span></span><br><span class="line">        avg = total / count</span><br><span class="line"></span><br><span class="line">g = averager()</span><br><span class="line"><span class="built_in">next</span>(g)</span><br><span class="line"><span class="built_in">print</span>(g.send(<span class="number">10</span>))   <span class="comment"># 10.0</span></span><br><span class="line"><span class="built_in">print</span>(g.send(<span class="number">20</span>))   <span class="comment"># 15.0</span></span><br><span class="line"><span class="built_in">print</span>(g.send(<span class="number">30</span>))   <span class="comment"># 20.0</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="2-用装饰器调用"><a href="#2-用装饰器调用" class="headerlink" title="2. 用装饰器调用"></a>2. 用装饰器调用</h3><p><strong>问题</strong>：用 <code>send()</code> 前必须先 <code>next()</code> 启动，容易忘。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">g = averager()</span><br><span class="line">g.send(<span class="number">10</span>)   <span class="comment"># ❌ TypeError: can&#x27;t send non-None value to a just-started generator</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>解决：自动启动装饰器</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> functools <span class="keyword">import</span> wraps</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">auto_start</span>(<span class="params">func</span>):</span><br><span class="line"><span class="meta">    @wraps(<span class="params">func</span>)</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">wrapper</span>(<span class="params">*args, **kwargs</span>):</span><br><span class="line">        g = func(*args, **kwargs)</span><br><span class="line">        <span class="built_in">next</span>(g)         <span class="comment"># 自动启动</span></span><br><span class="line">        <span class="keyword">return</span> g</span><br><span class="line">    <span class="keyword">return</span> wrapper</span><br><span class="line"></span><br><span class="line"><span class="meta">@auto_start</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">averager</span>():</span><br><span class="line">    total = <span class="number">0</span></span><br><span class="line">    count = <span class="number">0</span></span><br><span class="line">    avg = <span class="literal">None</span></span><br><span class="line">    <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">        x = <span class="keyword">yield</span> avg</span><br><span class="line">        total += x</span><br><span class="line">        count += <span class="number">1</span></span><br><span class="line">        avg = total / count</span><br><span class="line"></span><br><span class="line">g = averager()          <span class="comment"># 自动启动</span></span><br><span class="line"><span class="built_in">print</span>(g.send(<span class="number">10</span>))       <span class="comment"># 10.0</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>官方例子：@contextmanager</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> contextlib <span class="keyword">import</span> contextmanager</span><br><span class="line"></span><br><span class="line"><span class="meta">@contextmanager</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">my_open</span>(<span class="params">path</span>):</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;打开文件&quot;</span>)</span><br><span class="line">    f = <span class="built_in">open</span>(path)</span><br><span class="line">    <span class="keyword">yield</span> f</span><br><span class="line">    f.close()</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;关闭文件&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">with</span> my_open(<span class="string">&quot;a.txt&quot;</span>) <span class="keyword">as</span> f:</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;使用文件&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-对比表"><a href="#3-对比表" class="headerlink" title="3. 对比表"></a>3. 对比表</h3><table>
+<thead>
+<tr>
+<th align="left">对比项</th>
+<th align="left">手动调用</th>
+<th align="left">装饰器调用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">谁控制流程</td>
+<td align="left">你亲自 next&#x2F;send</td>
+<td align="left">装饰器帮你启动&#x2F;包装</td>
+</tr>
+<tr>
+<td align="left">启动步骤</td>
+<td align="left">必须手动 next(g)</td>
+<td align="left">自动完成</td>
+</tr>
+<tr>
+<td align="left">代码复杂度</td>
+<td align="left">灵活但要小心</td>
+<td align="left">简洁，逻辑清晰</td>
+</tr>
+<tr>
+<td align="left">典型用途</td>
+<td align="left">协程、双向通信</td>
+<td align="left">上下文管理器、自动启动</td>
+</tr>
+</tbody></table>
+<h3 id="4-总结"><a href="#4-总结" class="headerlink" title="4. 总结"></a>4. 总结</h3><blockquote>
+<p>手动调用：你自己用 next() 和 send() 驱动生成器。<br>装饰器调用：装饰器帮你自动启动或包装生成器。<br>本质：都是”驱动生成器”，一个亲手，一个代劳。</p>
+</blockquote>
+</div>
+  <nav class="article-end" aria-label="继续阅读"><a href="/topics/">浏览学习专题 <span aria-hidden="true">↗</span></a><a href="#main-content">回到顶部 ↑</a></nav>
+</article>
+
+</div>
+</main>
+
+<footer class="footer linx-footer">
+  <span>记录学习的过程，也记录慢慢想明白的事。</span>
+  <span><a href="https://github.com/dubingjie" target="_blank" rel="noopener noreferrer">GitHub</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://github.com/wu3227834/hexo-theme-aerlume">Aerlume</a></span>
+</footer>
+
+
+<script src="/js/linx.js" defer data-root="/" data-search="/search.json"></script>
+
+<script src="/js/clipboard.js" defer></script>
+<script src="/js/lightbox.js" defer></script>
+
+</body>
+</html>

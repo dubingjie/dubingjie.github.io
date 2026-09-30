@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Python 包管理：pip、模块导入与虚拟环境 · LinX的世界</title>
+  <meta name="description" content="整理 pip 安装、卸载和依赖导出命令，区分模块、包与库，并记录模块查找、虚拟环境及安装后无法导入的排查方法。">
+  <link rel="canonical" href="https://dubingjie.github.io/2026/09/23/python-pip-packages-environments/">
+  <meta property="og:title" content="Python 包管理：pip、模块导入与虚拟环境 · LinX的世界">
+  <meta property="og:description" content="整理 pip 安装、卸载和依赖导出命令，区分模块、包与库，并记录模块查找、虚拟环境及安装后无法导入的排查方法。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dubingjie.github.io/2026/09/23/python-pip-packages-environments/">
+  <meta property="og:site_name" content="LinX的世界">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  
+<link rel="stylesheet" href="/css/aerlume.css">
+
+  <style>@font-face{font-family:'Aerlume Local';src:url('/fonts/TsangerYuYangT_W03_W03.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}:root{--aerlume-local-font:'Aerlume Local'}</style>
+  
+<link rel="stylesheet" href="/css/linx.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="reading-page">
+<a class="skip-link" href="#main-content">跳到正文</a>
+
+  <main class="reading-shell" id="main-content">
+<div class="reading-tools">
+  <a class="reading-back" data-reading-back href="/"><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18"/></svg><span>返回</span></a>
+</div>
+<div class="article-reading-layout has-toc">
+  
+  <details class="reading-toc" id="reading-toc" open>
+    <summary><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="toc-open-label">目录</span><span class="toc-hide-label">隐藏 ←</span><span class="toc-show-label">目录 →</span></summary>
+    <nav class="reading-toc-panel" aria-label="文章目录"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#pip-%E4%B8%8E%E5%8C%85%E7%AE%A1%E7%90%86"><span class="toc-text">pip 与包管理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81pip-%E6%98%AF%E4%BB%80%E4%B9%88"><span class="toc-text">一、pip 是什么</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="toc-text">常用命令</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%8C%85-%E5%BA%93-%E6%A8%A1%E5%9D%97-%E7%AC%AC%E4%B8%89%E6%96%B9"><span class="toc-text">二、包 &#x2F; 库 &#x2F; 模块 &#x2F; 第三方</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%B2%BE%E7%A1%AE%E5%90%AB%E4%B9%89"><span class="toc-text">精确含义</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E6%9D%A5%E6%BA%90%E4%B8%89%E7%B1%BB"><span class="toc-text">代码来源三类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E5%BC%A0%E5%9B%BE"><span class="toc-text">一张图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81Python-%E6%89%BE%E5%8C%85%E9%A1%BA%E5%BA%8F"><span class="toc-text">三、Python 找包顺序</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E2%80%9D%E8%A3%85%E4%BA%86%E5%8D%B4-import-%E4%B8%8D%E5%88%B0%E2%80%9D%EF%BC%9F"><span class="toc-text">为什么”装了却 import 不到”？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8E%92%E6%9F%A5%E5%91%BD%E4%BB%A4"><span class="toc-text">排查命令</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%99%9A%E6%8B%9F%E7%8E%AF%E5%A2%83"><span class="toc-text">虚拟环境</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%AE%9E%E6%88%98%E5%9C%BA%E6%99%AF"><span class="toc-text">四、实战场景</span></a></li></ol></li></ol></nav>
+  </details>
+  
+<article class="post-container">
+  <header class="article-header">
+    <a class="article-category" href="/topics/#python">Python</a>
+    <h1 class="post-title">Python 包管理：pip、模块导入与虚拟环境</h1>
+    <div class="post-meta"><time datetime="2026-09-23T00:00:00.000Z">2026-09-23</time><span aria-hidden="true"> / </span><a href="/tags/Python/">Python</a><span aria-hidden="true"> · </span><a href="/tags/pip/">pip</a><span aria-hidden="true"> · </span><a href="/tags/%E5%8C%85%E7%AE%A1%E7%90%86%E5%99%A8/">包管理器</a><span aria-hidden="true"> · </span><a href="/tags/%E8%99%9A%E6%8B%9F%E7%8E%AF%E5%A2%83/">虚拟环境</a></div>
+    <p class="article-description">整理 pip 安装、卸载和依赖导出命令，区分模块、包与库，并记录模块查找、虚拟环境及安装后无法导入的排查方法。</p>
+  </header>
+  <div class="post-content"><h1 id="pip-与包管理"><a href="#pip-与包管理" class="headerlink" title="pip 与包管理"></a>pip 与包管理</h1><h2 id="一、pip-是什么"><a href="#一、pip-是什么" class="headerlink" title="一、pip 是什么"></a>一、pip 是什么</h2><p>一句话：**pip 是 Python 的”应用商店”**，一条命令装别人写好的库。</p>
+<p>类比：做菜不用从种菜开始，直接点外卖（<code>pip install</code>）送到厨房。</p>
+<h3 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">pip install requests            <span class="comment"># 装</span></span><br><span class="line">pip uninstall requests          <span class="comment"># 卸</span></span><br><span class="line">pip list                        <span class="comment"># 看装了啥</span></span><br><span class="line">pip install requests==2.28.0    <span class="comment"># 装指定版本</span></span><br><span class="line">pip freeze &gt; requirements.txt   <span class="comment"># 导出依赖清单</span></span><br><span class="line">pip install -r requirements.txt <span class="comment"># 按清单还原环境</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="二、包-库-模块-第三方"><a href="#二、包-库-模块-第三方" class="headerlink" title="二、包 &#x2F; 库 &#x2F; 模块 &#x2F; 第三方"></a>二、包 &#x2F; 库 &#x2F; 模块 &#x2F; 第三方</h2><h3 id="精确含义"><a href="#精确含义" class="headerlink" title="精确含义"></a>精确含义</h3><table>
+<thead>
+<tr>
+<th>词</th>
+<th>精确含义</th>
+<th>类比</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>模块</td>
+<td>一个 <code>.py</code> 文件</td>
+<td>一本书</td>
+</tr>
+<tr>
+<td>包</td>
+<td>一个文件夹（含多个模块）</td>
+<td>一个书架</td>
+</tr>
+<tr>
+<td>库</td>
+<td>口语，泛指代码集合</td>
+<td>一个图书馆</td>
+</tr>
+<tr>
+<td>第三方</td>
+<td>非官方、需 pip 安装</td>
+<td>别人写的</td>
+</tr>
+</tbody></table>
+<h3 id="代码来源三类"><a href="#代码来源三类" class="headerlink" title="代码来源三类"></a>代码来源三类</h3><table>
+<thead>
+<tr>
+<th>类别</th>
+<th>谁写的</th>
+<th>例子</th>
+<th>要不要装</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>标准库</td>
+<td>Python 官方</td>
+<td><code>os</code>、<code>math</code></td>
+<td>不用装</td>
+</tr>
+<tr>
+<td>第三方库</td>
+<td>别人</td>
+<td><code>requests</code>、<code>pandas</code></td>
+<td>要 pip 装</td>
+</tr>
+<tr>
+<td>自己写的</td>
+<td>你</td>
+<td><code>tools.py</code></td>
+<td>自己管</td>
+</tr>
+</tbody></table>
+<h3 id="一张图"><a href="#一张图" class="headerlink" title="一张图"></a>一张图</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">第三方库（口语，泛指一堆代码）</span><br><span class="line">   └── 第三方包（文件夹，可 import）</span><br><span class="line">          └── 第三方模块（单个 .py 文件）</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="三、Python-找包顺序"><a href="#三、Python-找包顺序" class="headerlink" title="三、Python 找包顺序"></a>三、Python 找包顺序</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1. 当前目录</span><br><span class="line">2. sys.path 里的目录（标准库 + 第三方库 + PYTHONPATH）</span><br><span class="line">3. 找不到 → ModuleNotFoundError</span><br></pre></td></tr></table></figure>
+
+<h3 id="为什么”装了却-import-不到”？"><a href="#为什么”装了却-import-不到”？" class="headerlink" title="为什么”装了却 import 不到”？"></a>为什么”装了却 import 不到”？</h3><p><strong>99% 是因为”装包的 pip”和”跑代码的 Python”不是同一个。</strong></p>
+<p>类比：把书放进了家里的书架，人却在公司找书。</p>
+<h3 id="排查命令"><a href="#排查命令" class="headerlink" title="排查命令"></a>排查命令</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">which</span> python    <span class="comment"># 看当前用哪个 python（Mac/Linux）</span></span><br><span class="line"><span class="built_in">where</span> python    <span class="comment"># Windows</span></span><br><span class="line"><span class="built_in">which</span> pip       <span class="comment"># 看 pip 指向哪</span></span><br><span class="line">python -c <span class="string">&quot;import sys; print(sys.path)&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="虚拟环境"><a href="#虚拟环境" class="headerlink" title="虚拟环境"></a>虚拟环境</h3><p><strong>虚拟环境 &#x3D; 给每个项目一个专属货架</strong>，避免版本打架。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">python -m venv venv          <span class="comment"># 创建</span></span><br><span class="line"><span class="built_in">source</span> venv/bin/activate     <span class="comment"># 激活（Mac/Linux）</span></span><br><span class="line">venv\Scripts\activate        <span class="comment"># 激活（Windows）</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="四、实战场景"><a href="#四、实战场景" class="headerlink" title="四、实战场景"></a>四、实战场景</h2><ul>
+<li>做数据分析：<code>pip install pandas numpy</code></li>
+<li>做爬虫：<code>pip install requests scrapy</code></li>
+<li>做 Web：<code>pip install django flask</code></li>
+<li>做 AI：<code>pip install torch transformers</code></li>
+<li>团队协作：<code>requirements.txt</code> 还原环境</li>
+</ul>
+</div>
+  <nav class="article-end" aria-label="继续阅读"><a href="/topics/">浏览学习专题 <span aria-hidden="true">↗</span></a><a href="#main-content">回到顶部 ↑</a></nav>
+</article>
+
+</div>
+</main>
+
+<footer class="footer linx-footer">
+  <span>记录学习的过程，也记录慢慢想明白的事。</span>
+  <span><a href="https://github.com/dubingjie" target="_blank" rel="noopener noreferrer">GitHub</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://github.com/wu3227834/hexo-theme-aerlume">Aerlume</a></span>
+</footer>
+
+
+<script src="/js/linx.js" defer data-root="/" data-search="/search.json"></script>
+
+<script src="/js/clipboard.js" defer></script>
+<script src="/js/lightbox.js" defer></script>
+
+</body>
+</html>

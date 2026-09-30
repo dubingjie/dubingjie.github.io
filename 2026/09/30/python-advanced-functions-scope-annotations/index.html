@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Python 函数进阶知识点总结 · LinX的世界</title>
+  <meta name="description" content="整理命名关键字参数、函数与容器类型注解、名称空间、LEGB 作用域、global、nonlocal 和函数作为返回值的用法。">
+  <link rel="canonical" href="https://dubingjie.github.io/2026/09/30/python-advanced-functions-scope-annotations/">
+  <meta property="og:title" content="Python 函数进阶知识点总结 · LinX的世界">
+  <meta property="og:description" content="整理命名关键字参数、函数与容器类型注解、名称空间、LEGB 作用域、global、nonlocal 和函数作为返回值的用法。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dubingjie.github.io/2026/09/30/python-advanced-functions-scope-annotations/">
+  <meta property="og:site_name" content="LinX的世界">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  
+<link rel="stylesheet" href="/css/aerlume.css">
+
+  <style>@font-face{font-family:'Aerlume Local';src:url('/fonts/TsangerYuYangT_W03_W03.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}:root{--aerlume-local-font:'Aerlume Local'}</style>
+  
+<link rel="stylesheet" href="/css/linx.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="reading-page">
+<a class="skip-link" href="#main-content">跳到正文</a>
+
+  <main class="reading-shell" id="main-content">
+<div class="reading-tools">
+  <a class="reading-back" data-reading-back href="/"><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18"/></svg><span>返回</span></a>
+</div>
+<div class="article-reading-layout has-toc">
+  
+  <details class="reading-toc" id="reading-toc" open>
+    <summary><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="toc-open-label">目录</span><span class="toc-hide-label">隐藏 ←</span><span class="toc-show-label">目录 →</span></summary>
+    <nav class="reading-toc-panel" aria-label="文章目录"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Python-%E5%87%BD%E6%95%B0%E8%BF%9B%E9%98%B6%E7%9F%A5%E8%AF%86%E7%82%B9%E6%80%BB%E7%BB%93"><span class="toc-text">Python 函数进阶知识点总结</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%91%BD%E5%90%8D%E5%85%B3%E9%94%AE%E5%AD%97%E5%8F%82%E6%95%B0"><span class="toc-text">一、命名关键字参数</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%98%AF%E4%BB%80%E4%B9%88"><span class="toc-text">是什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AF%AD%E6%B3%95"><span class="toc-text">语法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%AD%A3%E7%A1%AE%E4%B8%8E%E9%94%99%E8%AF%AF"><span class="toc-text">正确与错误</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%BB%98%E8%AE%A4%E5%80%BC"><span class="toc-text">默认值</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%89-args-%E6%97%B6%E4%B8%8D%E7%94%A8%E5%86%8D%E5%86%99"><span class="toc-text">有 *args 时不用再写 *</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%87%BD%E6%95%B0%E6%B3%A8%E8%A7%A3"><span class="toc-text">二、函数注解</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%98%AF%E4%BB%80%E4%B9%88-1"><span class="toc-text">是什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AF%AD%E6%B3%95-1"><span class="toc-text">语法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%EF%BC%9A%E4%B8%8D%E5%BC%BA%E5%88%B6"><span class="toc-text">关键：不强制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E7%B1%BB%E5%9E%8B"><span class="toc-text">常见类型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%92%8C%E5%91%BD%E5%90%8D%E5%85%B3%E9%94%AE%E5%AD%97%E5%8F%82%E6%95%B0%E4%B8%80%E8%B5%B7%E7%94%A8"><span class="toc-text">和命名关键字参数一起用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93-1"><span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E5%AE%B9%E5%99%A8%E7%B1%BB%E5%9E%8B%E6%B3%A8%E8%A7%A3"><span class="toc-text">三、为什么需要容器类型注解</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%97%AE%E9%A2%98"><span class="toc-text">问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A7%A3%E5%86%B3"><span class="toc-text">解决</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E5%AE%B9%E5%99%A8%E7%B1%BB%E5%9E%8B"><span class="toc-text">常见容器类型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#List-%E5%92%8C-Tuple-%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="toc-text">List 和 Tuple 的区别</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B5%8C%E5%A5%97%E8%AF%BB%E6%B3%95%EF%BC%9A%E4%BB%8E%E5%A4%96%E5%BE%80%E9%87%8C%E8%AF%BB"><span class="toc-text">嵌套读法：从外往里读</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93-2"><span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%90%8D%E7%A7%B0%E7%A9%BA%E9%97%B4%E5%92%8C%E4%BD%9C%E7%94%A8%E5%9F%9F"><span class="toc-text">四、名称空间和作用域</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%8D%E7%A7%B0%E7%A9%BA%E9%97%B4%E6%98%AF%E4%BB%80%E4%B9%88"><span class="toc-text">名称空间是什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%8D%E7%A7%B0%E7%A9%BA%E9%97%B4%E6%9C%89-3-%E7%A7%8D"><span class="toc-text">名称空间有 3 种</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BD%9C%E7%94%A8%E5%9F%9F%E6%98%AF%E4%BB%80%E4%B9%88"><span class="toc-text">作用域是什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BD%9C%E7%94%A8%E5%9F%9F%E6%9C%89-4-%E7%A7%8D"><span class="toc-text">作用域有 4 种</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9F%A5%E6%89%BE%E9%A1%BA%E5%BA%8F%EF%BC%9ALEGB"><span class="toc-text">查找顺序：LEGB</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BF%AE%E6%94%B9%E5%85%B3%E9%94%AE%E5%AD%97"><span class="toc-text">修改关键字</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93-3"><span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BA%94%E3%80%81global-%E5%92%8C-nonlocal-%E8%AF%A6%E8%A7%A3"><span class="toc-text">五、global 和 nonlocal 详解</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B"><span class="toc-text">示例</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E8%A7%84%E5%88%99"><span class="toc-text">核心规则</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%8D%E5%8F%AF%E5%8F%98-vs-%E5%8F%AF%E5%8F%98"><span class="toc-text">不可变 vs 可变</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93-4"><span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E9%97%AD%E5%8C%85%E5%87%BD%E6%95%B0"><span class="toc-text">六、闭包函数</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%98%AF%E4%BB%80%E4%B9%88-2"><span class="toc-text">是什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%80%E7%AE%80%E5%8D%95%E7%9A%84%E4%BE%8B%E5%AD%90"><span class="toc-text">最简单的例子</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%8F%AB%E9%97%AD%E5%8C%85"><span class="toc-text">为什么叫闭包</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AE%A1%E6%95%B0%E5%99%A8%E4%BE%8B%E5%AD%90"><span class="toc-text">计数器例子</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E4%B8%AA%E6%9D%A1%E4%BB%B6"><span class="toc-text">三个条件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%89%E4%BB%80%E4%B9%88%E7%94%A8"><span class="toc-text">有什么用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93-5"><span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E5%87%BD%E6%95%B0%E4%BD%9C%E4%B8%BA%E8%BF%94%E5%9B%9E%E5%80%BC%E4%B8%8E-main-%E8%A7%A3%E6%9E%90"><span class="toc-text">七、函数作为返回值与 main()() 解析</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B-1"><span class="toc-text">示例</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8B%86%E8%A7%A3-main"><span class="toc-text">拆解 main()()</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BE%93%E5%87%BA"><span class="toc-text">输出</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E5%8C%BA%E5%88%AB"><span class="toc-text">关键区别</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93-6"><span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E9%97%AD%E5%8C%85%E8%BF%9B%E9%98%B6%EF%BC%9A%E8%A3%85%E9%A5%B0%E5%99%A8%E9%9B%8F%E5%BD%A2"><span class="toc-text">八、闭包进阶：装饰器雏形</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B-2"><span class="toc-text">示例</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9C%A8%E5%B9%B2%E4%BB%80%E4%B9%88"><span class="toc-text">在干什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#outer-login-%E8%A7%A3%E6%9E%90"><span class="toc-text">outer(login)() 解析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E6%84%8F%E4%B9%89"><span class="toc-text">核心意义</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%92%8C%E8%A3%85%E9%A5%B0%E5%99%A8%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="toc-text">和装饰器的关系</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93-7"><span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%A4%E4%B8%AA-login-%E6%89%93%E5%8D%B0%E7%9A%84%E5%86%85%E5%AD%98%E5%9C%B0%E5%9D%80%E4%B8%8D%E4%B8%80%E6%A0%B7"><span class="toc-text">九、为什么两个 login 打印的内存地址不一样</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%93%E8%AE%BA"><span class="toc-text">结论</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%AA%8C%E8%AF%81"><span class="toc-text">验证</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9C%B0%E5%9D%80%E4%B8%8D%E5%90%8C%E7%9A%84%E5%8F%AF%E8%83%BD%E5%8E%9F%E5%9B%A0"><span class="toc-text">地址不同的可能原因</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E7%82%B9"><span class="toc-text">关键点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93-8"><span class="toc-text">总结</span></a></li></ol></li></ol></nav>
+  </details>
+  
+<article class="post-container">
+  <header class="article-header">
+    <a class="article-category" href="/topics/#python">Python</a>
+    <h1 class="post-title">Python 函数进阶知识点总结</h1>
+    <div class="post-meta"><time datetime="2026-09-30T00:00:00.000Z">2026-09-30</time><span aria-hidden="true"> / </span><a href="/tags/Python/">Python</a><span aria-hidden="true"> · </span><a href="/tags/%E5%87%BD%E6%95%B0/">函数</a><span aria-hidden="true"> · </span><a href="/tags/%E5%8F%82%E6%95%B0%E4%BC%A0%E9%80%92/">参数传递</a><span aria-hidden="true"> · </span><a href="/tags/%E7%B1%BB%E5%9E%8B%E6%B3%A8%E8%A7%A3/">类型注解</a><span aria-hidden="true"> · </span><a href="/tags/%E4%BD%9C%E7%94%A8%E5%9F%9F/">作用域</a><span aria-hidden="true"> · </span><a href="/tags/%E9%97%AD%E5%8C%85/">闭包</a></div>
+    <p class="article-description">整理命名关键字参数、函数与容器类型注解、名称空间、LEGB 作用域、global、nonlocal 和函数作为返回值的用法。</p>
+  </header>
+  <div class="post-content"><h1 id="Python-函数进阶知识点总结"><a href="#Python-函数进阶知识点总结" class="headerlink" title="Python 函数进阶知识点总结"></a>Python 函数进阶知识点总结</h1><hr>
+<h1 id="一、命名关键字参数"><a href="#一、命名关键字参数" class="headerlink" title="一、命名关键字参数"></a>一、命名关键字参数</h1><h2 id="是什么"><a href="#是什么" class="headerlink" title="是什么"></a>是什么</h2><blockquote>
+<p>写在 <code>*</code> 后面的参数，调用时必须用 <code>key=value</code> 的形式传，不能用位置传。</p>
+</blockquote>
+<h2 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">register</span>(<span class="params">name, age, *, sex, height</span>):</span><br><span class="line">    <span class="built_in">print</span>(name, age, sex, height)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>*</code> 前面的 <code>name</code>、<code>age</code>：普通位置参数</li>
+<li><code>*</code> 后面的 <code>sex</code>、<code>height</code>：命名关键字参数，必须用 <code>key=value</code> 传</li>
+<li><code>*</code> 只是分隔符号，不接收值</li>
+</ul>
+<h2 id="正确与错误"><a href="#正确与错误" class="headerlink" title="正确与错误"></a>正确与错误</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">register(<span class="string">&#x27;Dream&#x27;</span>, <span class="number">18</span>, sex=<span class="string">&#x27;male&#x27;</span>, height=<span class="string">&#x27;1.8m&#x27;</span>)   <span class="comment"># 正确</span></span><br><span class="line"></span><br><span class="line">register(<span class="string">&#x27;Dream&#x27;</span>, <span class="number">18</span>, <span class="string">&#x27;male&#x27;</span>, <span class="string">&#x27;1.8m&#x27;</span>)              <span class="comment"># 错误：不能按位置传</span></span><br><span class="line">register(<span class="string">&#x27;Dream&#x27;</span>, <span class="number">18</span>, height=<span class="string">&#x27;1.8m&#x27;</span>)               <span class="comment"># 错误：sex 没传</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="默认值"><a href="#默认值" class="headerlink" title="默认值"></a>默认值</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">register</span>(<span class="params">name, age, *, sex=<span class="string">&#x27;male&#x27;</span>, height</span>):</span><br><span class="line">    <span class="built_in">print</span>(name, age, sex, height)</span><br><span class="line"></span><br><span class="line">register(<span class="string">&#x27;Dream&#x27;</span>, <span class="number">18</span>, height=<span class="string">&#x27;1.8m&#x27;</span>)   <span class="comment"># sex 用默认值</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="有-args-时不用再写"><a href="#有-args-时不用再写" class="headerlink" title="有 *args 时不用再写 *"></a>有 <code>*args</code> 时不用再写 <code>*</code></h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">register</span>(<span class="params">name, age, *args, sex=<span class="string">&#x27;male&#x27;</span>, height</span>):</span><br><span class="line">    <span class="built_in">print</span>(name, age, args, sex, height)</span><br></pre></td></tr></table></figure>
+
+<p><code>*args</code> 后面的参数自动就是命名关键字参数。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
+<p>命名关键字参数 &#x3D; 写在 <code>*</code> 后面的参数，必须用 <code>key=value</code> 传，不能用位置传。</p>
+</blockquote>
+<hr>
+<h1 id="二、函数注解"><a href="#二、函数注解" class="headerlink" title="二、函数注解"></a>二、函数注解</h1><h2 id="是什么-1"><a href="#是什么-1" class="headerlink" title="是什么"></a>是什么</h2><blockquote>
+<p>给函数的参数和返回值贴个”类型标签”，说明它们”应该”是什么类型。</p>
+</blockquote>
+<p><strong>只是提示，不是强制。</strong></p>
+<h2 id="语法-1"><a href="#语法-1" class="headerlink" title="语法"></a>语法</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">add</span>(<span class="params">x: <span class="built_in">int</span>, y: <span class="built_in">int</span></span>) -&gt; <span class="built_in">int</span>:</span><br><span class="line">    <span class="keyword">return</span> x + y</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>x: int</code>：参数 x 应该是 int</li>
+<li><code>y: int</code>：参数 y 应该是 int</li>
+<li><code>-&gt; int</code>：返回值应该是 int</li>
+</ul>
+<h2 id="关键：不强制"><a href="#关键：不强制" class="headerlink" title="关键：不强制"></a>关键：不强制</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">print</span>(add(<span class="string">&quot;hello&quot;</span>, <span class="string">&quot;world&quot;</span>))   <span class="comment"># 输出 helloworld，不报错</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="常见类型"><a href="#常见类型" class="headerlink" title="常见类型"></a>常见类型</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> typing <span class="keyword">import</span> <span class="type">List</span>, <span class="type">Dict</span>, <span class="type">Union</span>, <span class="type">Optional</span>, <span class="type">Any</span></span><br><span class="line"></span><br><span class="line">x: <span class="built_in">int</span></span><br><span class="line">y: <span class="built_in">float</span></span><br><span class="line">s: <span class="built_in">str</span></span><br><span class="line">b: <span class="built_in">bool</span></span><br><span class="line"></span><br><span class="line">nums: <span class="type">List</span>[<span class="built_in">int</span>]                    <span class="comment"># 整数列表</span></span><br><span class="line">d: <span class="type">Dict</span>[<span class="built_in">str</span>, <span class="built_in">int</span>]                  <span class="comment"># 键 str、值 int 的字典</span></span><br><span class="line">n: <span class="type">Union</span>[<span class="built_in">int</span>, <span class="built_in">float</span>]               <span class="comment"># 可以是 int 或 float</span></span><br><span class="line">name: <span class="type">Optional</span>[<span class="built_in">str</span>]                <span class="comment"># 可以是 str 或 None</span></span><br><span class="line">data: <span class="type">Any</span>                          <span class="comment"># 任意类型</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="和命名关键字参数一起用"><a href="#和命名关键字参数一起用" class="headerlink" title="和命名关键字参数一起用"></a>和命名关键字参数一起用</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">register</span>(<span class="params">name: <span class="built_in">str</span>, age: <span class="built_in">int</span>, *, sex: <span class="built_in">str</span> = <span class="string">&#x27;male&#x27;</span>, height: <span class="built_in">str</span></span>) -&gt; <span class="literal">None</span>:</span><br><span class="line">    <span class="built_in">print</span>(name, age, sex, height)</span><br></pre></td></tr></table></figure>
+
+<h2 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h2><blockquote>
+<p>函数注解就是给参数和返回值贴类型标签，只是提示，不强制。</p>
+</blockquote>
+<hr>
+<h1 id="三、为什么需要容器类型注解"><a href="#三、为什么需要容器类型注解" class="headerlink" title="三、为什么需要容器类型注解"></a>三、为什么需要容器类型注解</h1><h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">process</span>(<span class="params">data: <span class="built_in">list</span></span>):</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+<p>光写 <code>list</code> 不够，因为列表里可以装任何东西：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]              <span class="comment"># 整数</span></span><br><span class="line">[<span class="string">&quot;a&quot;</span>, <span class="string">&quot;b&quot;</span>]             <span class="comment"># 字符串</span></span><br><span class="line">[&#123;<span class="string">&quot;name&quot;</span>: <span class="string">&quot;Dream&quot;</span>&#125;]    <span class="comment"># 字典</span></span><br></pre></td></tr></table></figure>
+
+<p>调用者不知道里面该放什么。</p>
+<h2 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> typing <span class="keyword">import</span> <span class="type">List</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">process</span>(<span class="params">data: <span class="type">List</span>[<span class="built_in">int</span>]</span>):</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+<p>现在信息完整：<strong>是列表，且每个元素是 int。</strong></p>
+<h2 id="常见容器类型"><a href="#常见容器类型" class="headerlink" title="常见容器类型"></a>常见容器类型</h2><table>
+<thead>
+<tr>
+<th>写法</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>List[int]</code></td>
+<td>整数列表</td>
+</tr>
+<tr>
+<td><code>Dict[str, int]</code></td>
+<td>键 str、值 int 的字典</td>
+</tr>
+<tr>
+<td><code>Tuple[str, int]</code></td>
+<td>第一个 str、第二个 int 的元组</td>
+</tr>
+<tr>
+<td><code>Set[int]</code></td>
+<td>整数集合</td>
+</tr>
+</tbody></table>
+<h2 id="List-和-Tuple-的区别"><a href="#List-和-Tuple-的区别" class="headerlink" title="List 和 Tuple 的区别"></a>List 和 Tuple 的区别</h2><ul>
+<li><code>List[int]</code>：每个元素都是 int，长度不限</li>
+<li><code>Tuple[str, int]</code>：固定位置，第一个必须是 str，第二个必须是 int</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Tuple</span>[<span class="built_in">str</span>, <span class="built_in">int</span>]     <span class="comment"># (&quot;Dream&quot;, 18)   正确</span></span><br><span class="line"><span class="type">Tuple</span>[<span class="built_in">str</span>, <span class="built_in">int</span>]     <span class="comment"># (18, &quot;Dream&quot;)   顺序反了</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="嵌套读法：从外往里读"><a href="#嵌套读法：从外往里读" class="headerlink" title="嵌套读法：从外往里读"></a>嵌套读法：从外往里读</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">List</span>[<span class="type">Dict</span>[<span class="built_in">str</span>, <span class="built_in">int</span>]]</span><br></pre></td></tr></table></figure>
+
+<p>读作：一个列表，里面每个元素是字典，字典的键是 str，值是 int。</p>
+<h2 id="总结-2"><a href="#总结-2" class="headerlink" title="总结"></a>总结</h2><blockquote>
+<p>容器类型注解 &#x3D; 不只说明”这是容器”，还说明”容器里装的是什么类型”。</p>
+</blockquote>
+<hr>
+<h1 id="四、名称空间和作用域"><a href="#四、名称空间和作用域" class="headerlink" title="四、名称空间和作用域"></a>四、名称空间和作用域</h1><h2 id="名称空间是什么"><a href="#名称空间是什么" class="headerlink" title="名称空间是什么"></a>名称空间是什么</h2><blockquote>
+<p>存放”变量名 -&gt; 变量值”映射关系的地方，可以理解成一个大字典。</p>
+</blockquote>
+<h2 id="名称空间有-3-种"><a href="#名称空间有-3-种" class="headerlink" title="名称空间有 3 种"></a>名称空间有 3 种</h2><table>
+<thead>
+<tr>
+<th>名称空间</th>
+<th>产生时机</th>
+<th>存了什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>内建</td>
+<td>解释器启动时</td>
+<td>print、len、int 等内置</td>
+</tr>
+<tr>
+<td>全局</td>
+<td>文件运行时</td>
+<td>文件顶层定义的变量、函数</td>
+</tr>
+<tr>
+<td>局部</td>
+<td>函数调用时</td>
+<td>函数内部的变量</td>
+</tr>
+</tbody></table>
+<h2 id="作用域是什么"><a href="#作用域是什么" class="headerlink" title="作用域是什么"></a>作用域是什么</h2><blockquote>
+<p>变量能被访问到的范围。</p>
+</blockquote>
+<h2 id="作用域有-4-种"><a href="#作用域有-4-种" class="headerlink" title="作用域有 4 种"></a>作用域有 4 种</h2><table>
+<thead>
+<tr>
+<th>作用域</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>局部 Local</td>
+<td>函数内部</td>
+</tr>
+<tr>
+<td>内嵌 Enclosed</td>
+<td>外层函数（闭包）</td>
+</tr>
+<tr>
+<td>全局 Global</td>
+<td>整个文件</td>
+</tr>
+<tr>
+<td>内建 Built-in</td>
+<td>所有文件</td>
+</tr>
+</tbody></table>
+<h2 id="查找顺序：LEGB"><a href="#查找顺序：LEGB" class="headerlink" title="查找顺序：LEGB"></a>查找顺序：LEGB</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">局部 -&gt; 内嵌 -&gt; 全局 -&gt; 内建</span><br></pre></td></tr></table></figure>
+
+<p>从里往外找，找到就停。</p>
+<h2 id="修改关键字"><a href="#修改关键字" class="headerlink" title="修改关键字"></a>修改关键字</h2><table>
+<thead>
+<tr>
+<th>关键字</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>global</code></td>
+<td>在函数里改全局变量</td>
+</tr>
+<tr>
+<td><code>nonlocal</code></td>
+<td>在内嵌函数里改外层函数变量</td>
+</tr>
+</tbody></table>
+<h2 id="总结-3"><a href="#总结-3" class="headerlink" title="总结"></a>总结</h2><blockquote>
+<ul>
+<li>名称空间：变量名和值存放的地方，分内建、全局、局部</li>
+<li>作用域：变量能生效的范围，分内建、全局、局部、内嵌</li>
+<li>查找顺序：局部 -&gt; 内嵌 -&gt; 全局 -&gt; 内建</li>
+<li>改全局用 <code>global</code>，改外层用 <code>nonlocal</code></li>
+</ul>
+</blockquote>
+<hr>
+<h1 id="五、global-和-nonlocal-详解"><a href="#五、global-和-nonlocal-详解" class="headerlink" title="五、global 和 nonlocal 详解"></a>五、global 和 nonlocal 详解</h1><h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">user_dict = &#123;<span class="string">&quot;age&quot;</span>: <span class="number">99</span>&#125;</span><br><span class="line">age = <span class="number">18</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">func</span>():</span><br><span class="line">    <span class="keyword">global</span> age          <span class="comment"># 声明：改全局的 age</span></span><br><span class="line">    age = <span class="number">19</span></span><br><span class="line"></span><br><span class="line">    age_ = age          <span class="comment"># 局部变量 age_</span></span><br><span class="line"></span><br><span class="line">    user_dict[<span class="string">&quot;age&quot;</span>] = <span class="number">999</span>   <span class="comment"># 不用 global 也能改</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">inner</span>():</span><br><span class="line">        <span class="keyword">nonlocal</span> age_   <span class="comment"># 声明：改 func 里的 age_</span></span><br><span class="line">        age_ = <span class="number">38</span></span><br><span class="line">        user_dict[<span class="string">&quot;age&quot;</span>] = <span class="number">888</span></span><br><span class="line"></span><br><span class="line">    inner()</span><br><span class="line">    <span class="built_in">print</span>(age_)         <span class="comment"># 38</span></span><br><span class="line"></span><br><span class="line">func()</span><br><span class="line"><span class="built_in">print</span>(age)              <span class="comment"># 19</span></span><br><span class="line"><span class="built_in">print</span>(user_dict[<span class="string">&quot;age&quot;</span>]) <span class="comment"># 888</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="核心规则"><a href="#核心规则" class="headerlink" title="核心规则"></a>核心规则</h2><table>
+<thead>
+<tr>
+<th>情况</th>
+<th>需要 global&#x2F;nonlocal 吗</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>不可变类型重新赋值</td>
+<td>需要</td>
+</tr>
+<tr>
+<td>可变类型改内容</td>
+<td>不需要</td>
+</tr>
+<tr>
+<td>可变类型重新赋值</td>
+<td>需要</td>
+</tr>
+</tbody></table>
+<h2 id="不可变-vs-可变"><a href="#不可变-vs-可变" class="headerlink" title="不可变 vs 可变"></a>不可变 vs 可变</h2><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>例子</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>不可变</td>
+<td>int、str、tuple</td>
+</tr>
+<tr>
+<td>可变</td>
+<td>list、dict、set</td>
+</tr>
+</tbody></table>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">func</span>():</span><br><span class="line">    user_dict[<span class="string">&quot;age&quot;</span>] = <span class="number">999</span>   <span class="comment"># 改内容，不用 global</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">func</span>():</span><br><span class="line">    <span class="keyword">global</span> user_dict</span><br><span class="line">    user_dict = &#123;<span class="string">&quot;age&quot;</span>: <span class="number">0</span>&#125;   <span class="comment"># 重新赋值，需要 global</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="总结-4"><a href="#总结-4" class="headerlink" title="总结"></a>总结</h2><blockquote>
+<ul>
+<li><code>global</code>：函数里改全局变量</li>
+<li><code>nonlocal</code>：内嵌函数里改外层函数变量</li>
+<li>可变类型改内容不用声明，重新赋值要声明</li>
+</ul>
+</blockquote>
+<hr>
+<h1 id="六、闭包函数"><a href="#六、闭包函数" class="headerlink" title="六、闭包函数"></a>六、闭包函数</h1><h2 id="是什么-2"><a href="#是什么-2" class="headerlink" title="是什么"></a>是什么</h2><blockquote>
+<p>闭包 &#x3D; 内嵌函数 + 引用外层变量 + 外层返回内层。</p>
+</blockquote>
+<p>三个条件同时满足才是闭包。</p>
+<h2 id="最简单的例子"><a href="#最简单的例子" class="headerlink" title="最简单的例子"></a>最简单的例子</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">outer</span>(<span class="params">x</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">inner</span>(<span class="params">y</span>):</span><br><span class="line">        <span class="keyword">return</span> x + y</span><br><span class="line">    <span class="keyword">return</span> inner</span><br><span class="line"></span><br><span class="line">add_5 = outer(<span class="number">5</span>)</span><br><span class="line"><span class="built_in">print</span>(add_5(<span class="number">3</span>))   <span class="comment"># 8</span></span><br></pre></td></tr></table></figure>
+
+<p><code>outer(5)</code> 执行完后，<code>x=5</code> 本该消失，但因为 <code>inner</code> 还在用它，所以被保存了下来。</p>
+<h2 id="为什么叫闭包"><a href="#为什么叫闭包" class="headerlink" title="为什么叫闭包"></a>为什么叫闭包</h2><blockquote>
+<p>内层函数把外层变量”包”起来了，带着一起走。</p>
+</blockquote>
+<p><code>add_5</code> 不只是一个函数，它还带着 <code>x=5</code>。</p>
+<h2 id="计数器例子"><a href="#计数器例子" class="headerlink" title="计数器例子"></a>计数器例子</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">counter</span>():</span><br><span class="line">    count = <span class="number">0</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">add</span>():</span><br><span class="line">        <span class="keyword">nonlocal</span> count</span><br><span class="line">        count += <span class="number">1</span></span><br><span class="line">        <span class="keyword">return</span> count</span><br><span class="line">    <span class="keyword">return</span> add</span><br><span class="line"></span><br><span class="line">c = counter()</span><br><span class="line"><span class="built_in">print</span>(c())   <span class="comment"># 1</span></span><br><span class="line"><span class="built_in">print</span>(c())   <span class="comment"># 2</span></span><br><span class="line"><span class="built_in">print</span>(c())   <span class="comment"># 3</span></span><br></pre></td></tr></table></figure>
+
+<p>核心价值：让变量在函数结束后依然保留。</p>
+<h2 id="三个条件"><a href="#三个条件" class="headerlink" title="三个条件"></a>三个条件</h2><table>
+<thead>
+<tr>
+<th>条件</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>有内嵌函数</td>
+<td>函数里定义了另一个函数</td>
+</tr>
+<tr>
+<td>内层用了外层变量</td>
+<td>inner 引用了 outer 的变量</td>
+</tr>
+<tr>
+<td>外层返回内层</td>
+<td>outer 把 inner 返回出去</td>
+</tr>
+</tbody></table>
+<h2 id="有什么用"><a href="#有什么用" class="headerlink" title="有什么用"></a>有什么用</h2><ol>
+<li>保存状态（计数器）</li>
+<li>生成定制函数</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">multiply</span>(<span class="params">n</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">inner</span>(<span class="params">x</span>):</span><br><span class="line">        <span class="keyword">return</span> x * n</span><br><span class="line">    <span class="keyword">return</span> inner</span><br><span class="line"></span><br><span class="line">double = multiply(<span class="number">2</span>)</span><br><span class="line">triple = multiply(<span class="number">3</span>)</span><br><span class="line"><span class="built_in">print</span>(double(<span class="number">5</span>))   <span class="comment"># 10</span></span><br><span class="line"><span class="built_in">print</span>(triple(<span class="number">5</span>))   <span class="comment"># 15</span></span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>装饰器的基础</li>
+</ol>
+<h2 id="总结-5"><a href="#总结-5" class="headerlink" title="总结"></a>总结</h2><blockquote>
+<p>闭包 &#x3D; 内嵌函数 + 引用外层变量 + 外层返回内层。</p>
+</blockquote>
+<hr>
+<h1 id="七、函数作为返回值与-main-解析"><a href="#七、函数作为返回值与-main-解析" class="headerlink" title="七、函数作为返回值与 main()() 解析"></a>七、函数作为返回值与 main()() 解析</h1><h2 id="示例-1"><a href="#示例-1" class="headerlink" title="示例"></a>示例</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">login_dict = &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">login</span>():</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;欢迎来到登陆功能&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">register</span>():</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;欢迎来到注册功能&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">main</span>():</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> login_dict.get(<span class="string">&quot;is_login&quot;</span>):</span><br><span class="line">        <span class="keyword">return</span> login      <span class="comment"># 注意：没括号</span></span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="keyword">return</span> register</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(main()())</span><br></pre></td></tr></table></figure>
+
+<h2 id="拆解-main"><a href="#拆解-main" class="headerlink" title="拆解 main()()"></a>拆解 main()()</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">main()      <span class="comment"># 返回 login 函数</span></span><br><span class="line">main()()    <span class="comment"># 就是 login()</span></span><br></pre></td></tr></table></figure>
+
+<p>等价于：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">result = main()</span><br><span class="line">result()</span><br></pre></td></tr></table></figure>
+
+<h2 id="输出"><a href="#输出" class="headerlink" title="输出"></a>输出</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">欢迎来到登陆功能</span><br><span class="line">None</span><br></pre></td></tr></table></figure>
+
+<p>第二行 None 是因为 <code>login()</code> 没有 return。</p>
+<h2 id="关键区别"><a href="#关键区别" class="headerlink" title="关键区别"></a>关键区别</h2><table>
+<thead>
+<tr>
+<th>写法</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>return login</code></td>
+<td>返回函数本身</td>
+</tr>
+<tr>
+<td><code>return login()</code></td>
+<td>调用函数，返回结果</td>
+</tr>
+</tbody></table>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">return</span> login      <span class="comment"># 返回函数本身，后面可加 () 调用</span></span><br><span class="line"><span class="keyword">return</span> login()    <span class="comment"># 直接调用，返回 None，后面加 () 会报错</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="总结-6"><a href="#总结-6" class="headerlink" title="总结"></a>总结</h2><blockquote>
+<p><code>main()()</code> &#x3D; 先调用 main 拿到一个函数，再调用那个函数。<br>不加括号是返回函数本身，加括号才是调用。</p>
+</blockquote>
+<hr>
+<h1 id="八、闭包进阶：装饰器雏形"><a href="#八、闭包进阶：装饰器雏形" class="headerlink" title="八、闭包进阶：装饰器雏形"></a>八、闭包进阶：装饰器雏形</h1><h2 id="示例-2"><a href="#示例-2" class="headerlink" title="示例"></a>示例</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">login_dict = &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">login</span>():</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;欢迎来到登陆功能&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">register</span>():</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;欢迎来到注册功能&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">outer</span>(<span class="params">func</span>):</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;func &gt;&gt;&gt;&gt;&gt; <span class="subst">&#123;func&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">inner</span>():</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;inner func &gt;&gt;&gt;&gt;&gt; <span class="subst">&#123;func&#125;</span>&quot;</span>)</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> login_dict.get(<span class="string">&quot;username&quot;</span>):</span><br><span class="line">            func()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> inner</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(outer(login)())</span><br><span class="line"><span class="built_in">print</span>(outer(register)())</span><br></pre></td></tr></table></figure>
+
+<h2 id="在干什么"><a href="#在干什么" class="headerlink" title="在干什么"></a>在干什么</h2><ol>
+<li><code>outer</code> 接收一个函数</li>
+<li>里面定义 <code>inner</code></li>
+<li><code>inner</code> 判断是否登录，没登录就调用 <code>func()</code></li>
+<li><code>outer</code> 返回 <code>inner</code></li>
+</ol>
+<h2 id="outer-login-解析"><a href="#outer-login-解析" class="headerlink" title="outer(login)() 解析"></a>outer(login)() 解析</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">outer(login)        <span class="comment"># 返回 inner 函数</span></span><br><span class="line">outer(login)()      <span class="comment"># 调用 inner()</span></span><br></pre></td></tr></table></figure>
+
+<p>执行过程：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">1. outer(login)</span><br><span class="line">   -&gt; 打印 func &gt;&gt;&gt;&gt;&gt; &lt;function login ...&gt;</span><br><span class="line">   -&gt; 返回 inner</span><br><span class="line"></span><br><span class="line">2. outer(login)()</span><br><span class="line">   -&gt; 打印 inner func &gt;&gt;&gt;&gt;&gt; &lt;function login ...&gt;</span><br><span class="line">   -&gt; 没登录，调用 login()</span><br><span class="line">   -&gt; 打印 欢迎来到登陆功能</span><br></pre></td></tr></table></figure>
+
+<h2 id="核心意义"><a href="#核心意义" class="headerlink" title="核心意义"></a>核心意义</h2><blockquote>
+<p>不直接调用 login，而是先用 outer 包装一层，加一个”检查是否登录”的判断。</p>
+</blockquote>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">login()          <span class="comment"># 直接执行，没检查</span></span><br><span class="line">outer(login)()   <span class="comment"># 先检查，没登录才执行</span></span><br></pre></td></tr></table></figure>
+
+<p>这就是装饰器的思想。</p>
+<h2 id="和装饰器的关系"><a href="#和装饰器的关系" class="headerlink" title="和装饰器的关系"></a>和装饰器的关系</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">login = outer(login)   <span class="comment"># 手动包装</span></span><br></pre></td></tr></table></figure>
+
+<p>用 <code>@</code> 语法糖：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@outer</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">login</span>():</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;欢迎来到登陆功能&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p><code>@outer</code> 等价于 <code>login = outer(login)</code>。</p>
+<h2 id="总结-7"><a href="#总结-7" class="headerlink" title="总结"></a>总结</h2><blockquote>
+<p>outer 是包装函数，接收一个函数，返回一个新函数 inner。<br>inner 在执行原函数前加了登录检查。<br>这就是闭包，也是装饰器的雏形。</p>
+</blockquote>
+<hr>
+<h1 id="九、为什么两个-login-打印的内存地址不一样"><a href="#九、为什么两个-login-打印的内存地址不一样" class="headerlink" title="九、为什么两个 login 打印的内存地址不一样"></a>九、为什么两个 login 打印的内存地址不一样</h1><h2 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h2><blockquote>
+<p>其实是同一个函数，同一次运行里地址一定一样。<br>笔记里不同，是因为那是分两次运行或手动抄的示例。</p>
+</blockquote>
+<h2 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">login</span>():</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;欢迎&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">outer</span>(<span class="params">func</span>):</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;outer 里的地址: <span class="subst">&#123;<span class="built_in">id</span>(func)&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">inner</span>():</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;inner 里的地址: <span class="subst">&#123;<span class="built_in">id</span>(func)&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="keyword">return</span> inner</span><br><span class="line"></span><br><span class="line">outer(login)()</span><br></pre></td></tr></table></figure>
+
+<p>输出两个 <code>id</code> 完全一样。</p>
+<h2 id="地址不同的可能原因"><a href="#地址不同的可能原因" class="headerlink" title="地址不同的可能原因"></a>地址不同的可能原因</h2><ol>
+<li>分两次运行记录（每次运行地址都重新分配）</li>
+<li>手动抄写时随手写的示例</li>
+<li>中途重新定义了 login</li>
+</ol>
+<h2 id="关键点"><a href="#关键点" class="headerlink" title="关键点"></a>关键点</h2><ul>
+<li>同一个函数对象，同一次运行地址一定相同</li>
+<li>不同次运行，地址会变</li>
+<li>判断是不是同一个函数，看 <code>id()</code></li>
+</ul>
+<h2 id="总结-8"><a href="#总结-8" class="headerlink" title="总结"></a>总结</h2><blockquote>
+<p>同一次运行，同一个函数，地址一定一样；<br>不同次运行，地址就会变；<br>笔记里的地址只是示意，不是真实对比依据。</p>
+</blockquote>
+</div>
+  <nav class="article-end" aria-label="继续阅读"><a href="/topics/">浏览学习专题 <span aria-hidden="true">↗</span></a><a href="#main-content">回到顶部 ↑</a></nav>
+</article>
+
+</div>
+</main>
+
+<footer class="footer linx-footer">
+  <span>记录学习的过程，也记录慢慢想明白的事。</span>
+  <span><a href="https://github.com/dubingjie" target="_blank" rel="noopener noreferrer">GitHub</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://github.com/wu3227834/hexo-theme-aerlume">Aerlume</a></span>
+</footer>
+
+
+<script src="/js/linx.js" defer data-root="/" data-search="/search.json"></script>
+
+<script src="/js/clipboard.js" defer></script>
+<script src="/js/lightbox.js" defer></script>
+
+</body>
+</html>

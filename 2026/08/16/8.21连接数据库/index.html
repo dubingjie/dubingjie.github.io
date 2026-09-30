@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>数据库连接排查：Navicat、SSH 隧道与网络配置 · LinX的世界</title>
+  <meta name="description" content="记录 Navicat 连接数据库、SSH 隧道，以及监听地址、防火墙和网络配置的排查过程。">
+  <link rel="canonical" href="https://dubingjie.github.io/2026/08/16/8.21%E8%BF%9E%E6%8E%A5%E6%95%B0%E6%8D%AE%E5%BA%93/">
+  <meta property="og:title" content="数据库连接排查：Navicat、SSH 隧道与网络配置 · LinX的世界">
+  <meta property="og:description" content="记录 Navicat 连接数据库、SSH 隧道，以及监听地址、防火墙和网络配置的排查过程。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dubingjie.github.io/2026/08/16/8.21%E8%BF%9E%E6%8E%A5%E6%95%B0%E6%8D%AE%E5%BA%93/">
+  <meta property="og:site_name" content="LinX的世界">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  
+<link rel="stylesheet" href="/css/aerlume.css">
+
+  <style>@font-face{font-family:'Aerlume Local';src:url('/fonts/TsangerYuYangT_W03_W03.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}:root{--aerlume-local-font:'Aerlume Local'}</style>
+  
+<link rel="stylesheet" href="/css/linx.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="reading-page">
+<a class="skip-link" href="#main-content">跳到正文</a>
+
+  <main class="reading-shell" id="main-content">
+<div class="reading-tools">
+  <a class="reading-back" data-reading-back href="/"><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18"/></svg><span>返回</span></a>
+</div>
+<div class="article-reading-layout has-toc">
+  
+  <details class="reading-toc" id="reading-toc" open>
+    <summary><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="toc-open-label">目录</span><span class="toc-hide-label">隐藏 ←</span><span class="toc-show-label">目录 →</span></summary>
+    <nav class="reading-toc-panel" aria-label="文章目录"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E3%80%901%E3%80%91%E8%A1%A5%E5%85%85-Linux-%E5%91%BD%E4%BB%A4"><span class="toc-text">【1】补充 Linux 命令</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E3%80%902%E3%80%91Linux-%E4%B8%8B%E7%9A%84%E6%96%87%E4%BB%B6%E7%9B%AE%E5%BD%95%EF%BC%9A"><span class="toc-text">【2】Linux 下的文件目录：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E3%80%903%E3%80%91%E7%94%A8-Navicat-%E8%BF%9E%E6%8E%A5%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="toc-text">【3】用 Navicat 连接数据库</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E3%80%904%E3%80%91SSH-%E9%9A%A7%E9%81%93%E8%BF%9E%E6%8E%A5%E6%96%B9%E5%BC%8F"><span class="toc-text">【4】SSH 隧道连接方式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E3%80%905%E3%80%91%E7%96%91%E6%83%91%EF%BC%9F"><span class="toc-text">【5】疑惑？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E3%80%906%E3%80%91netplan-%E7%BD%91%E7%BB%9C%E9%85%8D%E7%BD%AE%E5%B7%A5%E5%85%B7"><span class="toc-text">【6】netplan 网络配置工具</span></a></li></ol></nav>
+  </details>
+  
+<article class="post-container">
+  <header class="article-header">
+    <a class="article-category" href="/topics/#database">数据库与容器</a>
+    <h1 class="post-title">数据库连接排查：Navicat、SSH 隧道与网络配置</h1>
+    <div class="post-meta"><time datetime="2026-08-16T18:00:00.000Z">2026-08-16</time><span aria-hidden="true"> / </span><a href="/tags/Linux/">Linux</a><span aria-hidden="true"> · </span><a href="/tags/MySQL/">MySQL</a><span aria-hidden="true"> · </span><a href="/tags/SSH/">SSH</a></div>
+    <p class="article-description">记录 Navicat 连接数据库、SSH 隧道，以及监听地址、防火墙和网络配置的排查过程。</p>
+  </header>
+  <div class="post-content"><h2 id="【1】补充-Linux-命令"><a href="#【1】补充-Linux-命令" class="headerlink" title="【1】补充 Linux 命令"></a>【1】补充 Linux 命令</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 关机</span></span><br><span class="line">shutdown -h now</span><br><span class="line"></span><br><span class="line"><span class="comment"># 重启</span></span><br><span class="line">reboot</span><br><span class="line"></span><br><span class="line"><span class="comment"># 修改密码</span></span><br><span class="line">passwd</span><br></pre></td></tr></table></figure>
+
+<p>wg-quick up&#x2F;down hk</p>
+<p>curl ip.gs    用 curl 访问 ip.gs 这个网站，查看当前公网 IP 地址</p>
+<p>sudo mysql -u root    使用 root 权限打开 mysql 命令行</p>
+<p>sudo  以超级用户的身份执行命令</p>
+<p>grep  文本搜索工具，在文件里找出包含指定内容的行</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">grep 要找的内容 在哪个文件里找</span><br><span class="line"><span class="comment"># 例如</span></span><br><span class="line"><span class="built_in">sudo</span> grep DB_ /opt/inkwell-blog/backend/.env</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="【2】Linux-下的文件目录："><a href="#【2】Linux-下的文件目录：" class="headerlink" title="【2】Linux 下的文件目录："></a>【2】Linux 下的文件目录：</h2><p>&#x2F;etc    系统配置文件</p>
+<p>&#x2F;home    普通用户的个人目录    —–&gt;     C:\Users</p>
+<p>&#x2F;root    root 用户的个人目录    ——&gt;   Administrator 的目录</p>
+<p>&#x2F;var&#x2F;log    日志   —–&gt;    C:\Windows\Logs</p>
+<p>&#x2F;opt    第三方&#x2F;自行部署的软件     ——&gt;    C:\Program Files</p>
+<p>&#x2F;user&#x2F;bin   命令和程序   —–&gt;   C:\Windows\System32</p>
+<p>&#x2F;tem    临时文件   ——&gt;    C:\Windows\Temp</p>
+<p>&#x2F;opt   放自己部署的应用</p>
+<p>网络配置放 &#x2F;etc ：</p>
+<p>&#x2F;etc&#x2F;netplan&#x2F;50-cloud-init.yaml</p>
+<h2 id="【3】用-Navicat-连接数据库"><a href="#【3】用-Navicat-连接数据库" class="headerlink" title="【3】用 Navicat 连接数据库"></a>【3】用 Navicat 连接数据库</h2><p>执行：用来查看数据库配置</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> grep DB_ /opt/inkwell-blog/backend/.env</span><br></pre></td></tr></table></figure>
+
+<p>查询结果分析：</p>
+<ul>
+<li>DB_HOST&#x3D;127.0.0.1     主机</li>
+<li>DB_PORT&#x3D;3306       端口号</li>
+<li>DB_NAME&#x3D;inkwell_blog    用哪个数据库（名称）</li>
+<li>DB_USER&#x3D;inkwell     用哪个账号（账户）</li>
+<li>DB_PASSWORD&#x3D;xxx    密码</li>
+</ul>
+<p>127.0.0.1  ：意思是在我自己的这台电脑上（localhost），谁用它，它就指谁自己</p>
+<p>由于我的 inkwell-blog 项目和 mysql 数据库在同一台虚拟机里面，程序要连接数据库时，host 写 127.0.0.1 就是直接找本机的mysql 数据库</p>
+<p>Navicat 装在你的 Windows 电脑上，它发起连接时，数据库在”对面那台电脑”（虚拟机）上。所以对 Navicat 来说：</p>
+<table>
+<thead>
+<tr>
+<th>.env 里的值</th>
+<th>Navicat 里填什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>DB_HOST&#x3D;127.0.0.1</td>
+<td>主机：192.168.3.180</td>
+</tr>
+<tr>
+<td>DB_PORT&#x3D;3306</td>
+<td>端口：3306</td>
+</tr>
+<tr>
+<td>DB_USER&#x3D;inkwell</td>
+<td>用户名：inkwell</td>
+</tr>
+<tr>
+<td>DB_PASSWORD&#x3D;xxx</td>
+<td>密码：xxx</td>
+</tr>
+<tr>
+<td>DB_NAME&#x3D;inkwell_blog</td>
+<td>连接时不填，连上后点开这个库</td>
+</tr>
+</tbody></table>
+<h2 id="【4】SSH-隧道连接方式"><a href="#【4】SSH-隧道连接方式" class="headerlink" title="【4】SSH 隧道连接方式"></a>【4】SSH 隧道连接方式</h2><ul>
+<li>「SSH」页的主机：填 192.168.3.180 —— 这一步是 Windows 去找 Linux 虚拟机建隧道，站在 Windows 的角度，对方是虚拟机</li>
+<li>「常规」页的主机：填 127.0.0.1 —— 隧道建好后，连接请求是从 Linux 虚拟机”内部”发向 MySQL 的，站在 Linux 的角度，MySQL 就在自己这台机器上，所以填127.0.0.1</li>
+</ul>
+<p><strong>私钥文件地址：</strong></p>
+<p>Windows：C:\Users\你的用户名.ssh\</p>
+<p>Linux：~&#x2F;.ssh&#x2F;     root 用户就是 &#x2F;root&#x2F;.ssh&#x2F;，普通用户是 &#x2F;home&#x2F;用户名&#x2F;.ssh&#x2F;</p>
+<p><strong>&#x2F;root&#x2F;.ssh&#x2F;有三个文件：</strong></p>
+<p>id_ed25519 + id_ed25519.pub：虚拟机自己作为客户端、去连别的服务器时用的</p>
+<p>authorized_keys：这个文件里存着”被允许用公钥登录 root 的公钥列表”。</p>
+<p><strong>在 Windows 上生成密钥对：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh-keygen -t ed25519</span><br></pre></td></tr></table></figure>
+
+<p>然后把公钥在虚拟机里追加到 &#x2F;root&#x2F;.ssh&#x2F;authorized_keys 文件末尾</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 生成时指定文件名</span></span><br><span class="line">ssh-keygen -t ed25519 -f ~/.ssh/navicat_vm</span><br></pre></td></tr></table></figure>
+
+
+
+<table>
+<thead>
+<tr>
+<th>Navicat 的位置</th>
+<th>SSH 页</th>
+<th>常规 页</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>连的是什么</td>
+<td>Navicat 连接 Linux</td>
+<td>MySQL 软件</td>
+</tr>
+<tr>
+<td>填哪种账号</td>
+<td>Linux 系统账号</td>
+<td>MySQL 数据库账号</td>
+</tr>
+<tr>
+<td>具体填什么</td>
+<td>root</td>
+<td>inkwell</td>
+</tr>
+</tbody></table>
+<p>常见端口号：</p>
+<p>22 ：SSH 服务——管”远程登录这台电脑”的</p>
+<p>3306 ：MySQL 服务——管”数据库查询”的</p>
+<p>8000 ：（博客后端）</p>
+<p>80 窗口：（nginx）</p>
+<p>网页服务（HTTP）默认 80，加密的（HTTPS）默认 443</p>
+<h2 id="【5】疑惑？"><a href="#【5】疑惑？" class="headerlink" title="【5】疑惑？"></a>【5】疑惑？</h2><p>既然用SSH隧道连接了，那为什么常规页还需要填密码呢？用SSH隧道连接的目的不就是为了不填密码吗？</p>
+<p>SSH 隧道做的事情仅仅是：在你Windows 和虚拟机的 3306 端口之间，修一条加密的专用通道。数据从这条通道里走过去，别人偷看不到，防火墙也拦不住——但通道的终点依然是 MySQL 这个软件本身。</p>
+<p>MySQL 收到连接请求后，需要填写数据库账号和密码，才能连接上</p>
+<p><strong>不用 SSH 隧道，直连 MySQL 需要满足的条件：</strong></p>
+<ul>
+<li>MySQL 要对外开放 3306 端口（bind-address &#x3D; 0.0.0.0）</li>
+<li>防火墙要放行 3306</li>
+<li>数据库账号要允许远程登录（比如 inkwell@%）</li>
+<li>数据库密码在网络上明文传输的风险（MySQL 8 默认加密，好些，但端口暴露本身就是攻击面）</li>
+</ul>
+<p>正式的服务器出于安全，这些都是关掉的：3306 对外封死，账号只允许 localhost。这时 SSH 隧道是唯一入口——它只需要开放 22 一个端口，有密钥就能进，不用记 Linux 密码，传输全程加密。</p>
+<p><strong>不用SSH隧道的方式，直接输密码也能连接的原因：</strong></p>
+<p>MySQL 监听了 0.0.0.0:3306（bind-address &#x3D; 0.0.0.0），表示任何连接都可以，而不是只听本机（127.0.0.1）</p>
+<p>防火墙没拦 3306 端口——虚拟机的 ufw 是关闭状态，iptables 也是全放行，外部包能顺利到达 3306。</p>
+<p>数据库账号允许远程登录——inkwell 账号主机部分是 %（inkwell@%），表示”从任何 IP 来都可以”；如果是 inkwell@localhost，远程来了就会拒绝。</p>
+<p>可以在 Linux 下查看相应的内容：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># MySQL 监听地址（bind-address）</span></span><br><span class="line">grep -r bind-address /etc/mysql/</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看实际监听的地址：</span></span><br><span class="line"><span class="built_in">sudo</span> ss -tlnp | grep 3306</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看防火墙状态</span></span><br><span class="line"><span class="built_in">sudo</span> ufw status</span><br><span class="line"></span><br><span class="line"><span class="comment"># 以管理员权限，列出防火墙中负责&quot;进站流量&quot;这条规则链的所有规则，并用数字形式显示。</span></span><br><span class="line"><span class="built_in">sudo</span> iptables -L INPUT -n</span><br><span class="line"></span><br><span class="line"><span class="comment"># 直接执行后面的 sql 并退出</span></span><br><span class="line"><span class="built_in">sudo</span> mysql -u root -e <span class="string">&quot;SELECT user, host, plugin FROM mysql.user;&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>可以用这三个命令排查连不上数据库的问题：</p>
+<table>
+<thead>
+<tr>
+<th>层面</th>
+<th>命令</th>
+<th>看什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>软件层面</td>
+<td>sudo ss -tlnp  | grep 3306</td>
+<td>监听的是 0.0.0.0 还是 127.0.0.1</td>
+</tr>
+<tr>
+<td>系统防火墙</td>
+<td>sudo ufw status</td>
+<td>active 还是 inactive</td>
+</tr>
+<tr>
+<td>数据库账号是否允许远程</td>
+<td>sudo mysql -u root -e “SELECT user,host FROM mysql.user;”</td>
+<td>host 是 % 还是 localhost</td>
+</tr>
+</tbody></table>
+<p>输出如下：</p>
+<p>bind-address &#x3D; 0.0.0.0 —— 经典 MySQL 协议，监听 3306 端口</p>
+<p>mysqlx-bind-address &#x3D; 127.0.0.1 —— X 协议（MySQL X Plugin），监听 33060 端口</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">root@linux-server:~# grep -r bind-address /etc/mysql/</span><br><span class="line">/etc/mysql/mysql.conf.d/mysqld.cnf:bind-address         = 0.0.0.0</span><br><span class="line">/etc/mysql/mysql.conf.d/mysqld.cnf:mysqlx-bind-address  = 127.0.0.1</span><br></pre></td></tr></table></figure>
+
+<p>输出如下：</p>
+<p>host 列的 % &#x3D; 允许从任何 IP 连接；如果是 localhost 就只允许本机</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">root@linux-server:~# <span class="built_in">sudo</span> mysql -u root -e <span class="string">&quot;SELECT user, host, plugin FROM mysql.user;&quot;</span></span><br><span class="line">inkwell    %         caching_sha2_password</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="【6】netplan-网络配置工具"><a href="#【6】netplan-网络配置工具" class="headerlink" title="【6】netplan 网络配置工具"></a>【6】netplan 网络配置工具</h2><p>&#x2F;etc&#x2F;netplan&#x2F;50-cloud-init.yaml    配置文件</p>
+<p>dhcp4: true ：自动获取 IP</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 查看当前系统所有的路由规则</span></span><br><span class="line">ip route</span><br><span class="line"></span><br><span class="line"><span class="comment"># 输出如下：默认网关和网卡</span></span><br><span class="line">default via 192.168.3.1 dev ens33</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>与网络相关的常用命令：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 显示网卡本身的信息：IP 地址、MAC 地址等</span></span><br><span class="line">ip addr</span><br><span class="line"></span><br><span class="line"><span class="comment"># 数据包该往哪里发、查看网关、网卡</span></span><br><span class="line">ip route</span><br><span class="line"></span><br><span class="line"><span class="comment"># 测试是两台机器是否能通</span></span><br><span class="line">ping IP/域名</span><br><span class="line"></span><br><span class="line"><span class="comment"># 追踪数据包经过了哪些节点</span></span><br><span class="line"><span class="comment"># traceroute IP（需要安装）</span></span><br><span class="line"><span class="comment"># tracepath 192.168.3.107（可直接用）</span></span><br><span class="line"><span class="comment"># tracert 192.168.3.180（Windows系统）</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 测试端口通不通</span></span><br><span class="line">telnet IP 端口（Windows需要下载）</span><br><span class="line">telnet 192.168.3.107 80</span><br><span class="line">Test-NetConnection 192.168.3.180 -Port 80（Windows系统）</span><br><span class="line"></span><br><span class="line"><span class="comment"># netplan yaml 修改后，让网络配置生效（不用重启虚拟机）</span></span><br><span class="line">netplan apply</span><br><span class="line"></span><br><span class="line"><span class="comment"># 解析域名，查看IP</span></span><br><span class="line">nslookup 域名</span><br><span class="line"></span><br><span class="line"><span class="comment">#查看防火墙状态</span></span><br><span class="line">ufw status</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看本机正在监听的 TCP/UDP 端口，同时显示是哪个程序占用了端口。</span></span><br><span class="line">ss -tulnp</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看 nginx 服务当前运行状态</span></span><br><span class="line">systemctl status nginx</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看网络配置文件</span></span><br><span class="line"><span class="built_in">cat</span> /etc/netplan/50-cloud-init.yaml</span><br></pre></td></tr></table></figure>
+
+<p>Nginx 负责接收浏览器发来的网页访问请求，管理网页进出服务器的数据。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ping 192.168.3.1       <span class="comment"># 测网关通不通</span></span><br><span class="line">ping www.baidu.com     <span class="comment"># 测 DNS 和外网通不通</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+  <nav class="article-end" aria-label="继续阅读"><a href="/topics/">浏览学习专题 <span aria-hidden="true">↗</span></a><a href="#main-content">回到顶部 ↑</a></nav>
+</article>
+
+</div>
+</main>
+
+<footer class="footer linx-footer">
+  <span>记录学习的过程，也记录慢慢想明白的事。</span>
+  <span><a href="https://github.com/dubingjie" target="_blank" rel="noopener noreferrer">GitHub</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://github.com/wu3227834/hexo-theme-aerlume">Aerlume</a></span>
+</footer>
+
+
+<script src="/js/linx.js" defer data-root="/" data-search="/search.json"></script>
+
+<script src="/js/clipboard.js" defer></script>
+<script src="/js/lightbox.js" defer></script>
+
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Python 对象与内存：重新赋值、原地修改和推导式 · LinX的世界</title>
+  <meta name="description" content="通过函数传参示例区分重新赋值与原地修改，记录内存溢出和内存泄漏的区别，以及推导式、字符串拆分和 zip 的用法。">
+  <link rel="canonical" href="https://dubingjie.github.io/2026/09/20/python-objects-memory-comprehensions/">
+  <meta property="og:title" content="Python 对象与内存：重新赋值、原地修改和推导式 · LinX的世界">
+  <meta property="og:description" content="通过函数传参示例区分重新赋值与原地修改，记录内存溢出和内存泄漏的区别，以及推导式、字符串拆分和 zip 的用法。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dubingjie.github.io/2026/09/20/python-objects-memory-comprehensions/">
+  <meta property="og:site_name" content="LinX的世界">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  
+<link rel="stylesheet" href="/css/aerlume.css">
+
+  <style>@font-face{font-family:'Aerlume Local';src:url('/fonts/TsangerYuYangT_W03_W03.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}:root{--aerlume-local-font:'Aerlume Local'}</style>
+  
+<link rel="stylesheet" href="/css/linx.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="reading-page">
+<a class="skip-link" href="#main-content">跳到正文</a>
+
+  <main class="reading-shell" id="main-content">
+<div class="reading-tools">
+  <a class="reading-back" data-reading-back href="/"><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18"/></svg><span>返回</span></a>
+</div>
+<div class="article-reading-layout has-toc">
+  
+  <details class="reading-toc" id="reading-toc" open>
+    <summary><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="toc-open-label">目录</span><span class="toc-hide-label">隐藏 ←</span><span class="toc-show-label">目录 →</span></summary>
+    <nav class="reading-toc-panel" aria-label="文章目录"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#9%E6%9C%8820%E6%97%A5%E7%AC%94%E8%AE%B0"><span class="toc-text">9月20日笔记</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E3%80%901%E3%80%91%E9%87%8D%E6%96%B0%E8%B5%8B%E5%80%BC%E5%92%8C%E5%8E%9F%E5%9C%B0%E4%BF%AE%E6%94%B9"><span class="toc-text">【1】重新赋值和原地修改</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E3%80%902%E3%80%91%E5%86%85%E5%AD%98%E6%BA%A2%E5%87%BA"><span class="toc-text">【2】内存溢出</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E3%80%903%E3%80%91python-for-%E5%BE%AA%E7%8E%AF%E5%8D%87%E7%BA%A7"><span class="toc-text">【3】python for 循环升级</span></a></li></ol></li></ol></nav>
+  </details>
+  
+<article class="post-container">
+  <header class="article-header">
+    <a class="article-category" href="/topics/#python">Python</a>
+    <h1 class="post-title">Python 对象与内存：重新赋值、原地修改和推导式</h1>
+    <div class="post-meta"><time datetime="2026-09-20T00:00:00.000Z">2026-09-20</time><span aria-hidden="true"> / </span><a href="/tags/Python/">Python</a><span aria-hidden="true"> · </span><a href="/tags/%E5%87%BD%E6%95%B0/">函数</a><span aria-hidden="true"> · </span><a href="/tags/%E6%8E%A8%E5%AF%BC%E5%BC%8F/">推导式</a><span aria-hidden="true"> · </span><a href="/tags/%E5%86%85%E5%AD%98/">内存</a></div>
+    <p class="article-description">通过函数传参示例区分重新赋值与原地修改，记录内存溢出和内存泄漏的区别，以及推导式、字符串拆分和 zip 的用法。</p>
+  </header>
+  <div class="post-content"><h1 id="9月20日笔记"><a href="#9月20日笔记" class="headerlink" title="9月20日笔记"></a>9月20日笔记</h1><p>主要内容：</p>
+<p>1、编程语言排行榜</p>
+<p>2、python 中的变量名、内存地址、赋值等</p>
+<p>3、内存颗粒（图片）</p>
+<p>4、重新赋值和原地修改</p>
+<p>5、内存溢出（Out of Memory）</p>
+<h2 id="【1】重新赋值和原地修改"><a href="#【1】重新赋值和原地修改" class="headerlink" title="【1】重新赋值和原地修改"></a>【1】重新赋值和原地修改</h2><p>重新赋值不会影响外面的变量</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">test</span>(<span class="params">x</span>):</span><br><span class="line">    x = <span class="number">100</span>  <span class="comment"># 重新赋值，相当于换了把新锁</span></span><br><span class="line"></span><br><span class="line">a = <span class="number">10</span></span><br><span class="line">test(a)</span><br><span class="line"><span class="built_in">print</span>(a)  <span class="comment"># 还是 10，外面的 a 没变</span></span><br></pre></td></tr></table></figure>
+
+<p>只有可变对象才能原地修改，而且改了之后外面的变量也会跟着变，因为大家指向的是同一个对象。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">test</span>(<span class="params">lst</span>):</span><br><span class="line">    lst.append(<span class="number">4</span>)  <span class="comment"># 原地修改，打开了同一把锁改东西</span></span><br><span class="line"></span><br><span class="line">a = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line">test(a)</span><br><span class="line"><span class="built_in">print</span>(a)  <span class="comment"># [1, 2, 3, 4] ← 外面的 a 被改了！</span></span><br></pre></td></tr></table></figure>
+
+
+
+<table>
+<thead>
+<tr>
+<th>传参类型</th>
+<th>函数内重新赋值（<code>x = ...</code>）</th>
+<th>函数内原地修改（<code>.append()</code> 等）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>不可变（int、str、tuple）</td>
+<td>外面不变 ✅</td>
+<td>不可变对象没法原地修改 ❌</td>
+</tr>
+<tr>
+<td>可变（list、dict、set）</td>
+<td>外面不变 ✅</td>
+<td>外面会变！ ⚠️</td>
+</tr>
+</tbody></table>
+<p>Python 传参传的是引用的副本。函数里重新赋值不会影响外面（不管什么类型），但原地修改可变对象会影响外面。</p>
+<h2 id="【2】内存溢出"><a href="#【2】内存溢出" class="headerlink" title="【2】内存溢出"></a>【2】内存溢出</h2><p>内存溢出：程序需要的内存空间，超过了系统能提供的上限。</p>
+<ul>
+<li>内存泄漏 &#x3D; 住了房间不退出（长期问题，慢慢消耗）</li>
+<li>内存溢出 &#x3D; 所有房间都用完了（急性结果，程序崩溃）</li>
+</ul>
+<h2 id="【3】python-for-循环升级"><a href="#【3】python-for-循环升级" class="headerlink" title="【3】python for 循环升级"></a>【3】python for 循环升级</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># for user_info in user_data.values():</span></span><br><span class="line"><span class="comment">#     data = &#x27;|&#x27;.join([str(value) for value in user_info.values()])</span></span><br><span class="line"><span class="comment">#     print(data)</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># data = [&#x27;|&#x27;.join([str(value) for value in user_info.values()]) for user_info in user_data.values()]</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># print(data)</span></span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&quot;1.text&quot;</span>, <span class="string">&#x27;r&#x27;</span>, encoding=<span class="string">&quot;utf-8&quot;</span>) <span class="keyword">as</span> fp:</span><br><span class="line">    data = fp.read().split(<span class="string">&quot; &quot;</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li><code>fp.read()</code> 读到整个字符串：<code>&quot;hello world python&quot;</code></li>
+<li><code>.split(&quot; &quot;)</code> 按空格切成列表：<code>[&quot;hello&quot;, &quot;world&quot;, &quot;python&quot;]</code></li>
+</ul>
+<p><strong>推导式：</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[表达式  <span class="keyword">for</span> 变量 <span class="keyword">in</span> 可迭代对象  <span class="keyword">if</span> 条件]</span><br><span class="line">   ↑            ↑                  ↑</span><br><span class="line"> 要放进去的    遍历            筛选条件</span><br></pre></td></tr></table></figure>
+
+
+
+<p>zip 的用法：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">res_list = [a * b <span class="keyword">for</span> a, b <span class="keyword">in</span> <span class="built_in">zip</span>(num_one, num_two)]</span><br><span class="line"><span class="built_in">print</span>(res_list)   <span class="comment"># [4, 10, 18]</span></span><br></pre></td></tr></table></figure>
+</div>
+  <nav class="article-end" aria-label="继续阅读"><a href="/topics/">浏览学习专题 <span aria-hidden="true">↗</span></a><a href="#main-content">回到顶部 ↑</a></nav>
+</article>
+
+</div>
+</main>
+
+<footer class="footer linx-footer">
+  <span>记录学习的过程，也记录慢慢想明白的事。</span>
+  <span><a href="https://github.com/dubingjie" target="_blank" rel="noopener noreferrer">GitHub</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://github.com/wu3227834/hexo-theme-aerlume">Aerlume</a></span>
+</footer>
+
+
+<script src="/js/linx.js" defer data-root="/" data-search="/search.json"></script>
+
+<script src="/js/clipboard.js" defer></script>
+<script src="/js/lightbox.js" defer></script>
+
+</body>
+</html>

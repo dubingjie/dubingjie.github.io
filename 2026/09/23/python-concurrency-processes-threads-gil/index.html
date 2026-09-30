@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Python 并发入门：进程、线程、竞态条件与 GIL · LinX的世界</title>
+  <meta name="description" content="通过生活类比区分进程与线程，比较资源隔离、通信和开销，并记录竞态条件、GIL 及不同任务中的并发方案选择。">
+  <link rel="canonical" href="https://dubingjie.github.io/2026/09/23/python-concurrency-processes-threads-gil/">
+  <meta property="og:title" content="Python 并发入门：进程、线程、竞态条件与 GIL · LinX的世界">
+  <meta property="og:description" content="通过生活类比区分进程与线程，比较资源隔离、通信和开销，并记录竞态条件、GIL 及不同任务中的并发方案选择。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dubingjie.github.io/2026/09/23/python-concurrency-processes-threads-gil/">
+  <meta property="og:site_name" content="LinX的世界">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  
+<link rel="stylesheet" href="/css/aerlume.css">
+
+  <style>@font-face{font-family:'Aerlume Local';src:url('/fonts/TsangerYuYangT_W03_W03.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}:root{--aerlume-local-font:'Aerlume Local'}</style>
+  
+<link rel="stylesheet" href="/css/linx.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="reading-page">
+<a class="skip-link" href="#main-content">跳到正文</a>
+
+  <main class="reading-shell" id="main-content">
+<div class="reading-tools">
+  <a class="reading-back" data-reading-back href="/"><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18"/></svg><span>返回</span></a>
+</div>
+<div class="article-reading-layout has-toc">
+  
+  <details class="reading-toc" id="reading-toc" open>
+    <summary><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="toc-open-label">目录</span><span class="toc-hide-label">隐藏 ←</span><span class="toc-show-label">目录 →</span></summary>
+    <nav class="reading-toc-panel" aria-label="文章目录"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%EF%BC%9A%E7%BA%BF%E7%A8%8B%E4%B8%8E%E8%BF%9B%E7%A8%8B"><span class="toc-text">并发编程：线程与进程</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%A0%B8%E5%BF%83%E6%AF%94%E5%96%BB"><span class="toc-text">一、核心比喻</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E7%A7%8D%E6%96%B9%E6%A1%88"><span class="toc-text">三种方案</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E8%BF%9B%E7%A8%8B%E6%98%AF%E4%BB%80%E4%B9%88"><span class="toc-text">二、进程是什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E7%BA%BF%E7%A8%8B%E6%98%AF%E4%BB%80%E4%B9%88"><span class="toc-text">三、线程是什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E8%BF%9B%E7%A8%8B-vs-%E7%BA%BF%E7%A8%8B"><span class="toc-text">四、进程 vs 线程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E8%81%94%E7%B3%BB"><span class="toc-text">五、联系</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88%E7%94%A8%EF%BC%9F"><span class="toc-text">六、为什么用？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%81%9A%E9%A5%AD%E7%B1%BB%E6%AF%94"><span class="toc-text">做饭类比</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E5%B9%B6%E5%8F%91%E9%97%AE%E9%A2%98%EF%BC%9A%E7%AB%9E%E6%80%81%E6%9D%A1%E4%BB%B6"><span class="toc-text">七、并发问题：竞态条件</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%96%E8%88%8D"><span class="toc-text">取舍</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81Python-%E7%9A%84-GIL"><span class="toc-text">八、Python 的 GIL</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%89%E6%8B%A9"><span class="toc-text">选择</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%A3%E8%AF%80"><span class="toc-text">口诀</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E5%AE%9E%E6%88%98%E5%9C%BA%E6%99%AF"><span class="toc-text">九、实战场景</span></a></li></ol></li></ol></nav>
+  </details>
+  
+<article class="post-container">
+  <header class="article-header">
+    <a class="article-category" href="/topics/#python">Python</a>
+    <h1 class="post-title">Python 并发入门：进程、线程、竞态条件与 GIL</h1>
+    <div class="post-meta"><time datetime="2026-09-23T00:00:00.000Z">2026-09-23</time><span aria-hidden="true"> / </span><a href="/tags/Python/">Python</a><span aria-hidden="true"> · </span><a href="/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a><span aria-hidden="true"> · </span><a href="/tags/%E8%BF%9B%E7%A8%8B/">进程</a><span aria-hidden="true"> · </span><a href="/tags/%E7%BA%BF%E7%A8%8B/">线程</a><span aria-hidden="true"> · </span><a href="/tags/GIL/">GIL</a></div>
+    <p class="article-description">通过生活类比区分进程与线程，比较资源隔离、通信和开销，并记录竞态条件、GIL 及不同任务中的并发方案选择。</p>
+  </header>
+  <div class="post-content"><h1 id="并发编程：线程与进程"><a href="#并发编程：线程与进程" class="headerlink" title="并发编程：线程与进程"></a>并发编程：线程与进程</h1><h2 id="一、核心比喻"><a href="#一、核心比喻" class="headerlink" title="一、核心比喻"></a>一、核心比喻</h2><ul>
+<li><strong>进程 &#x3D; 工厂</strong>（独立资源，稳但重）</li>
+<li><strong>线程 &#x3D; 工人</strong>（共享资源，快但易冲突）</li>
+<li>一个进程可含多个线程</li>
+</ul>
+<h3 id="三种方案"><a href="#三种方案" class="headerlink" title="三种方案"></a>三种方案</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">方案 A：一个工厂，一个工人</span><br><span class="line">工厂（进程）</span><br><span class="line">   └── 工人（线程）→ 慢</span><br><span class="line"></span><br><span class="line">方案 B：一个工厂，多个工人</span><br><span class="line">工厂（进程）</span><br><span class="line">   ├── 工人1</span><br><span class="line">   ├── 工人2</span><br><span class="line">   └── 工人3</span><br><span class="line">   共用厂房、机器、仓库</span><br><span class="line"></span><br><span class="line">方案 C：多个工厂，各干各的</span><br><span class="line">工厂1（进程）→ 做上衣</span><br><span class="line">工厂2（进程）→ 做裤子</span><br><span class="line">工厂3（进程）→ 做帽子</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="二、进程是什么"><a href="#二、进程是什么" class="headerlink" title="二、进程是什么"></a>二、进程是什么</h2><p><strong>进程 &#x3D; 一个正在运行的程序。</strong></p>
+<ul>
+<li><strong>独立</strong>：每个进程有自己的内存，互不干扰</li>
+<li><strong>安全</strong>：一个崩了，一般不影响别的</li>
+<li><strong>重量级</strong>：创建、切换开销大</li>
+<li><strong>通信麻烦</strong>：要走 IPC（管道、socket 等）</li>
+</ul>
+<p>类比：每个工厂是独立的院子，围墙很高，想递东西得走大门。</p>
+<hr>
+<h2 id="三、线程是什么"><a href="#三、线程是什么" class="headerlink" title="三、线程是什么"></a>三、线程是什么</h2><p><strong>线程 &#x3D; 进程内部的一个执行流。</strong></p>
+<p>一个浏览器进程：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">浏览器进程</span><br><span class="line">   ├── 线程1：渲染页面</span><br><span class="line">   ├── 线程2：下载文件</span><br><span class="line">   ├── 线程3：处理用户点击</span><br><span class="line">   └── 线程4：播放视频</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>共享</strong>：同一进程的线程共用内存</li>
+<li><strong>轻量</strong>：创建、切换开销小</li>
+<li><strong>通信快</strong>：直接读写共享内存</li>
+<li><strong>危险</strong>：一个线程崩了可能拖垮整个进程</li>
+</ul>
+<p>类比：同一工厂的工人，共用厂房，交流方便，但一个闯祸全厂遭殃。</p>
+<hr>
+<h2 id="四、进程-vs-线程"><a href="#四、进程-vs-线程" class="headerlink" title="四、进程 vs 线程"></a>四、进程 vs 线程</h2><table>
+<thead>
+<tr>
+<th>对比项</th>
+<th>进程</th>
+<th>线程</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>是什么</td>
+<td>运行中的程序</td>
+<td>进程里的执行流</td>
+</tr>
+<tr>
+<td>资源</td>
+<td>独立</td>
+<td>共享</td>
+</tr>
+<tr>
+<td>内存</td>
+<td>各自独立</td>
+<td>共用</td>
+</tr>
+<tr>
+<td>开销</td>
+<td>大（重）</td>
+<td>小（轻）</td>
+</tr>
+<tr>
+<td>通信</td>
+<td>麻烦（IPC）</td>
+<td>简单（共享变量）</td>
+</tr>
+<tr>
+<td>安全</td>
+<td>一个崩了不影响别的</td>
+<td>一个崩了可能全挂</td>
+</tr>
+<tr>
+<td>数量级</td>
+<td>几十</td>
+<td>几百上千</td>
+</tr>
+<tr>
+<td>比喻</td>
+<td>工厂</td>
+<td>工人</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="五、联系"><a href="#五、联系" class="headerlink" title="五、联系"></a>五、联系</h2><p><strong>包含关系：程序 &gt; 进程 &gt; 线程</strong></p>
+<ul>
+<li>没有进程，线程无处安身</li>
+<li>一个进程至少有一个线程（主线程）</li>
+<li>线程不能脱离进程单独存在</li>
+</ul>
+<hr>
+<h2 id="六、为什么用？"><a href="#六、为什么用？" class="headerlink" title="六、为什么用？"></a>六、为什么用？</h2><ul>
+<li><strong>用进程</strong>：为了隔离和稳定（Chrome 每标签一进程）</li>
+<li><strong>用线程</strong>：为了并发和省资源（下载时还能点按钮）</li>
+</ul>
+<h3 id="做饭类比"><a href="#做饭类比" class="headerlink" title="做饭类比"></a>做饭类比</h3><table>
+<thead>
+<tr>
+<th>场景</th>
+<th>对应</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>一个厨房一个厨师</td>
+<td>单进程单线程</td>
+</tr>
+<tr>
+<td>一个厨房多个厨师</td>
+<td>单进程多线程</td>
+</tr>
+<tr>
+<td>多个厨房各做各的</td>
+<td>多进程</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="七、并发问题：竞态条件"><a href="#七、并发问题：竞态条件" class="headerlink" title="七、并发问题：竞态条件"></a>七、并发问题：竞态条件</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">count = <span class="number">0</span></span><br><span class="line"><span class="comment"># 线程1: count = count + 1</span></span><br><span class="line"><span class="comment"># 线程2: count = count + 1</span></span><br><span class="line"><span class="comment"># 理想=2，实际可能=1（两个线程同时读到0，各自加1写回，覆盖）</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>这叫”竞态条件”，需要加锁（Lock）解决。</strong></p>
+<p>类比：两个厨师同时往同一个碗里加盐，都以为自己是第一个。</p>
+<h3 id="取舍"><a href="#取舍" class="headerlink" title="取舍"></a>取舍</h3><ul>
+<li>进程：隔离好、通信难</li>
+<li>线程：共享好、易冲突</li>
+</ul>
+<hr>
+<h2 id="八、Python-的-GIL"><a href="#八、Python-的-GIL" class="headerlink" title="八、Python 的 GIL"></a>八、Python 的 GIL</h2><ul>
+<li><strong>同一时刻，一个进程里只有一个线程能执行 Python 代码</strong></li>
+<li>多线程<strong>不能真正并行跑 CPU 密集任务</strong></li>
+<li>但<strong>适合 I&#x2F;O 密集任务</strong>（等的时候可以切换）</li>
+</ul>
+<h3 id="选择"><a href="#选择" class="headerlink" title="选择"></a>选择</h3><table>
+<thead>
+<tr>
+<th>任务类型</th>
+<th>选什么</th>
+<th>例子</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>I&#x2F;O 密集</td>
+<td>多线程</td>
+<td>下载、读写文件、请求接口</td>
+</tr>
+<tr>
+<td>CPU 密集</td>
+<td>多进程</td>
+<td>计算、图像处理</td>
+</tr>
+</tbody></table>
+<h3 id="口诀"><a href="#口诀" class="headerlink" title="口诀"></a>口诀</h3><blockquote>
+<p>“等”的任务用线程，”算”的任务用进程。</p>
+</blockquote>
+<hr>
+<h2 id="九、实战场景"><a href="#九、实战场景" class="headerlink" title="九、实战场景"></a>九、实战场景</h2><ul>
+<li><strong>爬虫</strong>：多线程&#x2F;多进程并发抓取，快 N 倍</li>
+<li><strong>Web 服务</strong>：每请求一线程&#x2F;协程，同时服务很多人</li>
+<li><strong>数据清洗</strong>：多进程并行处理大文件</li>
+<li><strong>图像处理</strong>：多进程绕开 GIL</li>
+<li><strong>实时系统</strong>：注意线程竞争，加锁</li>
+</ul>
+</div>
+  <nav class="article-end" aria-label="继续阅读"><a href="/topics/">浏览学习专题 <span aria-hidden="true">↗</span></a><a href="#main-content">回到顶部 ↑</a></nav>
+</article>
+
+</div>
+</main>
+
+<footer class="footer linx-footer">
+  <span>记录学习的过程，也记录慢慢想明白的事。</span>
+  <span><a href="https://github.com/dubingjie" target="_blank" rel="noopener noreferrer">GitHub</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://github.com/wu3227834/hexo-theme-aerlume">Aerlume</a></span>
+</footer>
+
+
+<script src="/js/linx.js" defer data-root="/" data-search="/search.json"></script>
+
+<script src="/js/clipboard.js" defer></script>
+<script src="/js/lightbox.js" defer></script>
+
+</body>
+</html>
