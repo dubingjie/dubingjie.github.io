@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>字符编码入门：ASCII、GBK、Unicode 与 UTF-8 · LinX的世界</title>
+  <meta name="description" content="梳理字符、码点与字节之间的关系，对比常见编码，结合 Python 编码与解码示例理解乱码及文件、接口和数据库中的编码问题。">
+  <link rel="canonical" href="https://dubingjie.github.io/2026/09/23/character-encoding-ascii-gbk-unicode-utf8/">
+  <meta property="og:title" content="字符编码入门：ASCII、GBK、Unicode 与 UTF-8 · LinX的世界">
+  <meta property="og:description" content="梳理字符、码点与字节之间的关系，对比常见编码，结合 Python 编码与解码示例理解乱码及文件、接口和数据库中的编码问题。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dubingjie.github.io/2026/09/23/character-encoding-ascii-gbk-unicode-utf8/">
+  <meta property="og:site_name" content="LinX的世界">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  
+<link rel="stylesheet" href="/css/aerlume.css">
+
+  <style>@font-face{font-family:'Aerlume Local';src:url('/fonts/TsangerYuYangT_W03_W03.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}:root{--aerlume-local-font:'Aerlume Local'}</style>
+  
+<link rel="stylesheet" href="/css/linx.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="reading-page">
+<a class="skip-link" href="#main-content">跳到正文</a>
+
+  <main class="reading-shell" id="main-content">
+<div class="reading-tools">
+  <a class="reading-back" data-reading-back href="/"><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18"/></svg><span>返回</span></a>
+</div>
+<div class="article-reading-layout has-toc">
+  
+  <details class="reading-toc" id="reading-toc" open>
+    <summary><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="toc-open-label">目录</span><span class="toc-hide-label">隐藏 ←</span><span class="toc-show-label">目录 →</span></summary>
+    <nav class="reading-toc-panel" aria-label="文章目录"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81%EF%BC%9AASCII-GBK-Unicode-UTF-8"><span class="toc-text">字符编码：ASCII &#x2F; GBK &#x2F; Unicode &#x2F; UTF-8</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%A0%B8%E5%BF%83%E7%BB%93%E8%AE%BA"><span class="toc-text">一、核心结论</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%AD%97%E7%AC%A6%E6%80%8E%E4%B9%88%E8%BF%9B%E7%94%B5%E8%84%91%EF%BC%9F"><span class="toc-text">二、字符怎么进电脑？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81Unicode%EF%BC%9A%E5%85%A8%E7%90%83%E5%AD%97%E5%85%B8"><span class="toc-text">三、Unicode：全球字典</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E4%B8%89%E7%A7%8D%E7%BC%96%E7%A0%81%E6%A0%BC%E5%BC%8F"><span class="toc-text">四、三种编码格式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-ASCII-%E2%80%94%E2%80%94-%E5%8F%AA%E5%A4%9F%E8%8B%B1%E6%96%87"><span class="toc-text">1. ASCII —— 只够英文</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-GBK-%E2%80%94%E2%80%94-%E4%B8%AD%E5%9B%BD%E8%87%AA%E5%B7%B1%E6%90%9E%E7%9A%84"><span class="toc-text">2. GBK —— 中国自己搞的</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-UTF-8-%E2%80%94%E2%80%94-%E5%85%A8%E7%90%83%E7%BB%9F%E4%B8%80"><span class="toc-text">3. UTF-8 —— 全球统一</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E4%BD%A0%E5%8D%A1%E4%BD%8F%E7%9A%84%E9%82%A3%E6%AE%B5%EF%BC%8C%E7%BF%BB%E8%AF%91%E6%88%90%E4%BA%BA%E8%AF%9D"><span class="toc-text">五、你卡住的那段，翻译成人话</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B9%B1%E7%A0%81%EF%BC%9F"><span class="toc-text">六、为什么乱码？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E6%98%93%E6%B7%B7%E7%82%B9"><span class="toc-text">七、易混点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81Python-%E5%AE%9E%E6%93%8D"><span class="toc-text">八、Python 实操</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E5%AE%9E%E6%88%98%E5%9C%BA%E6%99%AF"><span class="toc-text">九、实战场景</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E3%80%81%E5%AE%8C%E6%95%B4%E5%9B%BE%E7%A4%BA"><span class="toc-text">十、完整图示</span></a></li></ol></li></ol></nav>
+  </details>
+  
+<article class="post-container">
+  <header class="article-header">
+    <a class="article-category" href="/topics/#python">Python</a>
+    <h1 class="post-title">字符编码入门：ASCII、GBK、Unicode 与 UTF-8</h1>
+    <div class="post-meta"><time datetime="2026-09-23T00:00:00.000Z">2026-09-23</time><span aria-hidden="true"> / </span><a href="/tags/Python/">Python</a><span aria-hidden="true"> · </span><a href="/tags/%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81/">字符编码</a><span aria-hidden="true"> · </span><a href="/tags/Unicode/">Unicode</a><span aria-hidden="true"> · </span><a href="/tags/UTF-8/">UTF-8</a></div>
+    <p class="article-description">梳理字符、码点与字节之间的关系，对比常见编码，结合 Python 编码与解码示例理解乱码及文件、接口和数据库中的编码问题。</p>
+  </header>
+  <div class="post-content"><h1 id="字符编码：ASCII-GBK-Unicode-UTF-8"><a href="#字符编码：ASCII-GBK-Unicode-UTF-8" class="headerlink" title="字符编码：ASCII &#x2F; GBK &#x2F; Unicode &#x2F; UTF-8"></a>字符编码：ASCII &#x2F; GBK &#x2F; Unicode &#x2F; UTF-8</h1><h2 id="一、核心结论"><a href="#一、核心结论" class="headerlink" title="一、核心结论"></a>一、核心结论</h2><blockquote>
+<p><strong>Unicode 是”字典”（给字符发编号）。</strong><br><strong>ASCII &#x2F; GBK &#x2F; UTF-8 是”翻译方式”（把编号变成字节）。</strong></p>
+</blockquote>
+<hr>
+<h2 id="二、字符怎么进电脑？"><a href="#二、字符怎么进电脑？" class="headerlink" title="二、字符怎么进电脑？"></a>二、字符怎么进电脑？</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">字符&quot;中&quot; → 找到编号(Unicode) → 按某套规则写成字节(具体编码)</span><br></pre></td></tr></table></figure>
+
+<p>两步走：<strong>先查编号，再写成字节。</strong></p>
+<hr>
+<h2 id="三、Unicode：全球字典"><a href="#三、Unicode：全球字典" class="headerlink" title="三、Unicode：全球字典"></a>三、Unicode：全球字典</h2><p>给每个字符发唯一编号：</p>
+<table>
+<thead>
+<tr>
+<th>字符</th>
+<th>编号</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>A</td>
+<td>U+0041</td>
+</tr>
+<tr>
+<td>中</td>
+<td>U+4E2D</td>
+</tr>
+<tr>
+<td>😀</td>
+<td>U+1F600</td>
+</tr>
+</tbody></table>
+<p><strong>注意：编号还没变成电脑能存的字节。</strong></p>
+<p>类比：Unicode 像一本全球统一的字典，每个字都有页码。但页码本身还没变成硬盘上的 0 和 1。</p>
+<hr>
+<h2 id="四、三种编码格式"><a href="#四、三种编码格式" class="headerlink" title="四、三种编码格式"></a>四、三种编码格式</h2><h3 id="1-ASCII-——-只够英文"><a href="#1-ASCII-——-只够英文" class="headerlink" title="1. ASCII —— 只够英文"></a>1. ASCII —— 只够英文</h3><ul>
+<li>0~127，1 字节</li>
+<li><code>A</code> → 65 → <code>01000001</code></li>
+<li>中文没有 ASCII 编号，存不了</li>
+</ul>
+<h3 id="2-GBK-——-中国自己搞的"><a href="#2-GBK-——-中国自己搞的" class="headerlink" title="2. GBK —— 中国自己搞的"></a>2. GBK —— 中国自己搞的</h3><ul>
+<li>中文 2 字节，英文 1 字节</li>
+<li>只在中国用，不兼容别国</li>
+</ul>
+<h3 id="3-UTF-8-——-全球统一"><a href="#3-UTF-8-——-全球统一" class="headerlink" title="3. UTF-8 —— 全球统一"></a>3. UTF-8 —— 全球统一</h3><ul>
+<li>英文 1 字节、中文 3 字节、emoji 4 字节</li>
+<li>变长，省空间，全球通用</li>
+</ul>
+<hr>
+<h2 id="五、你卡住的那段，翻译成人话"><a href="#五、你卡住的那段，翻译成人话" class="headerlink" title="五、你卡住的那段，翻译成人话"></a>五、你卡住的那段，翻译成人话</h2><p>原文：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">英文字符 → unicode 编号 → ASCII 存</span><br><span class="line">中文字符 → unicode 编号 → GBK 存</span><br><span class="line">【4】诞生 utf-8</span><br><span class="line">英文字符 → unicode 编号 → utf-8 存</span><br><span class="line">中文字符 → unicode 编号 → utf-8 存</span><br></pre></td></tr></table></figure>
+
+<p>翻译：</p>
+<blockquote>
+<p>以前各国各搞一套（英文 ASCII、中文 GBK），混排麻烦、易乱码。<br><strong>UTF-8 出现，全球统一：所有字符都查 Unicode 编号，再用 UTF-8 存。</strong><br>这就是”各搞各的”变成”全球统一”。</p>
+</blockquote>
+<hr>
+<h2 id="六、为什么乱码？"><a href="#六、为什么乱码？" class="headerlink" title="六、为什么乱码？"></a>六、为什么乱码？</h2><p><strong>存的时候用编码 A，读的时候用编码 B。</strong></p>
+<p>类比：用中文写信，对方按英文语法读。</p>
+<p><strong>统一 UTF-8 基本不会乱码。</strong></p>
+<hr>
+<h2 id="七、易混点"><a href="#七、易混点" class="headerlink" title="七、易混点"></a>七、易混点</h2><table>
+<thead>
+<tr>
+<th>你以为</th>
+<th>实际</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Unicode 就是 UTF-8</td>
+<td>❌ 一个是字典，一个是存字节方式</td>
+</tr>
+<tr>
+<td>ASCII 能存中文</td>
+<td>❌ 只能英文和符号</td>
+</tr>
+<tr>
+<td>GBK 是国际标准</td>
+<td>❌ 只是中国标准</td>
+</tr>
+<tr>
+<td>UTF-8 每字符 3 字节</td>
+<td>❌ 变长：英1、中3、emoji4</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="八、Python-实操"><a href="#八、Python-实操" class="headerlink" title="八、Python 实操"></a>八、Python 实操</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 字符串（Unicode）→ 字节（编码）</span></span><br><span class="line"><span class="string">&quot;中&quot;</span>.encode(<span class="string">&quot;utf-8&quot;</span>)      <span class="comment"># b&#x27;\xe4\xb8\xad&#x27;  （3个字节）</span></span><br><span class="line"><span class="string">&quot;A&quot;</span>.encode(<span class="string">&quot;utf-8&quot;</span>)       <span class="comment"># b&#x27;A&#x27;              （1个字节）</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 字节 → 字符串（解码）</span></span><br><span class="line"><span class="string">b&#x27;\xe4\xb8\xad&#x27;</span>.decode(<span class="string">&quot;utf-8&quot;</span>)   <span class="comment"># &quot;中&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 编码解码不对应，就会乱码</span></span><br><span class="line"><span class="string">&quot;中&quot;</span>.encode(<span class="string">&quot;utf-8&quot;</span>).decode(<span class="string">&quot;gbk&quot;</span>)   <span class="comment"># 乱码！</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>记忆：<code>encode</code> &#x3D; 编码（字符→字节），<code>decode</code> &#x3D; 解码（字节→字符）。</strong></p>
+<hr>
+<h2 id="九、实战场景"><a href="#九、实战场景" class="headerlink" title="九、实战场景"></a>九、实战场景</h2><ul>
+<li><strong>爬虫乱码</strong>：<code>resp.encoding = &#39;utf-8&#39;</code></li>
+<li><strong>文件读写</strong>：<code>open(f, encoding=&#39;utf-8&#39;)</code></li>
+<li><strong>接口对接</strong>：统一 UTF-8 避免乱码</li>
+<li><strong>数据库</strong>：建库建表指定 <code>utf8mb4</code>，能存 emoji</li>
+<li><strong>日志分析</strong>：日志编码不对，中文全是问号</li>
+</ul>
+<hr>
+<h2 id="十、完整图示"><a href="#十、完整图示" class="headerlink" title="十、完整图示"></a>十、完整图示</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">     字符                 Unicode 编号            最终存的字节</span><br><span class="line">                       （全球唯一字典）</span><br><span class="line">┌────────┐</span><br><span class="line">│  &quot;A&quot;   │ ──查字典──→  U+0041    ──UTF-8──→  01000001 (1字节)</span><br><span class="line">└────────┘</span><br><span class="line">┌────────┐</span><br><span class="line">│  &quot;中&quot;  │ ──查字典──→  U+4E2D    ──UTF-8──→  11100100... (3字节)</span><br><span class="line">└────────┘</span><br><span class="line"></span><br><span class="line">以前：</span><br><span class="line">  &quot;A&quot;  ──Unicode──→ U+0041  ──ASCII──→ 1字节</span><br><span class="line">  &quot;中&quot; ──Unicode──→ U+4E2D  ──GBK────→ 2字节</span><br><span class="line">  ↑ 两套标准，混着用容易乱</span><br><span class="line"></span><br><span class="line">现在：</span><br><span class="line">  全部 ──Unicode──→ 编号 ──UTF-8──→ 字节</span><br><span class="line">  ↑ 一套标准，全球统一</span><br></pre></td></tr></table></figure></div>
+  <nav class="article-end" aria-label="继续阅读"><a href="/topics/">浏览学习专题 <span aria-hidden="true">↗</span></a><a href="#main-content">回到顶部 ↑</a></nav>
+</article>
+
+</div>
+</main>
+
+<footer class="footer linx-footer">
+  <span>记录学习的过程，也记录慢慢想明白的事。</span>
+  <span><a href="https://github.com/dubingjie" target="_blank" rel="noopener noreferrer">GitHub</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://github.com/wu3227834/hexo-theme-aerlume">Aerlume</a></span>
+</footer>
+
+
+<script src="/js/linx.js" defer data-root="/" data-search="/search.json"></script>
+
+<script src="/js/clipboard.js" defer></script>
+<script src="/js/lightbox.js" defer></script>
+
+</body>
+</html>

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Python 入门：开发工具、运行环境与基础概念 · LinX的世界</title>
+  <meta name="description" content="从 Markdown 和计算机基础开始，记录 Python 解释器、虚拟环境与基本数据类型的学习过程。">
+  <link rel="canonical" href="https://dubingjie.github.io/2026/08/12/Day1/">
+  <meta property="og:title" content="Python 入门：开发工具、运行环境与基础概念 · LinX的世界">
+  <meta property="og:description" content="从 Markdown 和计算机基础开始，记录 Python 解释器、虚拟环境与基本数据类型的学习过程。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dubingjie.github.io/2026/08/12/Day1/">
+  <meta property="og:site_name" content="LinX的世界">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  
+<link rel="stylesheet" href="/css/aerlume.css">
+
+  <style>@font-face{font-family:'Aerlume Local';src:url('/fonts/TsangerYuYangT_W03_W03.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}:root{--aerlume-local-font:'Aerlume Local'}</style>
+  
+<link rel="stylesheet" href="/css/linx.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="reading-page">
+<a class="skip-link" href="#main-content">跳到正文</a>
+
+  <main class="reading-shell" id="main-content">
+<div class="reading-tools">
+  <a class="reading-back" data-reading-back href="/"><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18"/></svg><span>返回</span></a>
+</div>
+<div class="article-reading-layout has-toc">
+  
+  <details class="reading-toc" id="reading-toc" open>
+    <summary><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="toc-open-label">目录</span><span class="toc-hide-label">隐藏 ←</span><span class="toc-show-label">目录 →</span></summary>
+    <nav class="reading-toc-panel" aria-label="文章目录"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Day1"><span class="toc-text">Day1</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E3%80%81markdown"><span class="toc-text">一、markdown</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%87%E9%A2%98"><span class="toc-text">标题</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E5%9D%97"><span class="toc-text">代码块</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%97%E8%A1%A8"><span class="toc-text">列表</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%96%87%E6%9C%AC%E5%8A%A0%E7%B2%97"><span class="toc-text">文本加粗</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%8F%92%E5%85%A5%E8%A1%A8%E6%A0%BC"><span class="toc-text">插入表格</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%8A%E4%BC%A0%E5%9B%BE%E7%89%87"><span class="toc-text">上传图片</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%BB%E9%A2%98"><span class="toc-text">主题</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80"><span class="toc-text">二、编程语言</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E4%BB%80%E4%B9%88%E6%98%AF%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%EF%BC%9F"><span class="toc-text">1、什么是编程语言？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E4%BB%80%E4%B9%88%E6%98%AF%E7%BC%96%E7%A8%8B%EF%BC%9F"><span class="toc-text">2、什么是编程？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BC%9A%E5%87%BA%E7%8E%B0%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%EF%BC%9F"><span class="toc-text">3、为什么会出现编程语言？</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86"><span class="toc-text">三、计算机组成原理</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E4%BB%80%E4%B9%88%E6%98%AF%E8%AE%A1%E7%AE%97%E6%9C%BA%EF%BC%9F"><span class="toc-text">1、什么是计算机？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E5%8F%91%E6%98%8E%E8%AE%A1%E7%AE%97%E6%9C%BA%EF%BC%9F"><span class="toc-text">2、为什么要发明计算机？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E4%BA%94%E5%A4%A7%E7%BB%84%E6%88%90%E9%83%A8%E5%88%86%EF%BC%9F"><span class="toc-text">3、计算机的五大组成部分？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4%E3%80%81%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%B8%89%E5%A4%A7%E6%A0%B8%E5%BF%83%E7%A1%AC%E4%BB%B6"><span class="toc-text">4、计算机三大核心硬件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5%E3%80%81%E8%BF%9B%E5%88%B6"><span class="toc-text">5、进制</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#6%E3%80%81%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%9A%84%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F"><span class="toc-text">6、计算机的操作系统</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#7%E3%80%81%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E7%9A%84%E4%B8%89%E5%B1%82%E6%9E%B6%E6%9E%84"><span class="toc-text">7、计算机系统的三层架构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#8%E3%80%81%E5%B9%B3%E5%8F%B0"><span class="toc-text">8、平台</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%E4%BB%8B%E7%BB%8D"><span class="toc-text">四、编程语言介绍</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E4%BB%80%E4%B9%88%E6%98%AF%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80"><span class="toc-text">1、什么是编程语言</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E6%8C%89%E7%85%A7%E5%8F%91%E5%B1%95%E9%98%B6%E6%AE%B5"><span class="toc-text">2、按照发展阶段</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%94%E3%80%81python"><span class="toc-text">五、python</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#python%E7%9A%84%E5%BA%94%E7%94%A8%E9%A2%86%E5%9F%9F"><span class="toc-text">python的应用领域</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#python%E8%A7%A3%E9%87%8A%E5%99%A8%E7%9A%84%E7%A7%8D%E7%B1%BB"><span class="toc-text">python解释器的种类</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Day2"><span class="toc-text">Day2</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E3%80%81python%E4%BB%A3%E7%A0%81%E7%9A%84%E4%B9%A6%E5%86%99%E6%96%B9%E5%BC%8F"><span class="toc-text">二、python代码的书写方式</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E5%9C%A8%E6%96%87%E6%9C%AC%E6%96%87%E4%BB%B6%E4%B8%AD%E4%B9%A6%E5%86%99"><span class="toc-text">1、在文本文件中书写</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E5%9C%A8%E7%BB%88%E7%AB%AF%E6%89%A7%E8%A1%8C"><span class="toc-text">2、在终端执行</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81pycharm%E7%BC%96%E8%BE%91%E5%99%A8"><span class="toc-text">3、pycharm编辑器</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E8%A1%A5%E5%85%85"><span class="toc-text">三、补充</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81pip-%E6%8D%A2%E6%BA%90"><span class="toc-text">1、pip 换源</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E7%B3%BB%E7%BB%9F%E7%8E%AF%E5%A2%83%E5%92%8C%E8%99%9A%E6%8B%9F%E7%8E%AF%E5%A2%83%E4%BB%8B%E7%BB%8D"><span class="toc-text">2、系统环境和虚拟环境介绍</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81%E5%88%9B%E5%BB%BA%E8%99%9A%E6%8B%9F%E7%8E%AF%E5%A2%83%E7%9A%84%E4%B8%89%E7%A7%8D%E6%96%B9%E5%BC%8F"><span class="toc-text">3、创建虚拟环境的三种方式</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4%E3%80%81pycharm%E8%A1%A5%E5%85%85"><span class="toc-text">4、pycharm补充</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#python%E5%AD%A6%E4%B9%A0"><span class="toc-text">python学习</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1%E3%80%81%E5%8F%98%E9%87%8F%E7%9A%84%E4%B8%89%E5%A4%A7%E7%89%B9%E6%80%A7%EF%BC%9A"><span class="toc-text">1、变量的三大特性：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2%E3%80%81%E5%B8%B8%E9%87%8F"><span class="toc-text">2、常量</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3%E3%80%81PEP8%E8%A7%84%E8%8C%83"><span class="toc-text">3、PEP8规范</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4%E3%80%81%E5%85%AB%E5%A4%A7%E5%9F%BA%E6%9C%AC%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B"><span class="toc-text">4、八大基本数据类型</span></a></li></ol></li></ol></li></ol></nav>
+  </details>
+  
+<article class="post-container">
+  <header class="article-header">
+    <a class="article-category" href="/topics/#python">Python</a>
+    <h1 class="post-title">Python 入门：开发工具、运行环境与基础概念</h1>
+    <div class="post-meta"><time datetime="2026-08-12T18:00:00.000Z">2026-08-12</time><span aria-hidden="true"> / </span><a href="/tags/Python/">Python</a><span aria-hidden="true"> · </span><a href="/tags/Markdown/">Markdown</a><span aria-hidden="true"> · </span><a href="/tags/PyCharm/">PyCharm</a></div>
+    <p class="article-description">从 Markdown 和计算机基础开始，记录 Python 解释器、虚拟环境与基本数据类型的学习过程。</p>
+  </header>
+  <div class="post-content"><h2 id="Day1"><a href="#Day1" class="headerlink" title="Day1"></a>Day1</h2><h3 id="一、markdown"><a href="#一、markdown" class="headerlink" title="一、markdown"></a>一、markdown</h3><h4 id="标题"><a href="#标题" class="headerlink" title="标题"></a>标题</h4><p>ctrl +1、2、3、4、5、6是1-6级标题</p>
+<h4 id="代码块"><a href="#代码块" class="headerlink" title="代码块"></a>代码块</h4><p>三个反引号+编程语言是代码块</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#例如 python</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="列表"><a href="#列表" class="headerlink" title="列表"></a>列表</h4><p>无序列表：ctrl + shift + }</p>
+<p>有序列表：ctrl + shift + {</p>
+<h4 id="文本加粗"><a href="#文本加粗" class="headerlink" title="文本加粗"></a>文本加粗</h4><p>ctrl + B</p>
+<h4 id="插入表格"><a href="#插入表格" class="headerlink" title="插入表格"></a>插入表格</h4><p>段落插入</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h4 id="上传图片"><a href="#上传图片" class="headerlink" title="上传图片"></a>上传图片</h4><p>! [] ()</p>
+<p>PicGo</p>
+<h4 id="主题"><a href="#主题" class="headerlink" title="主题"></a>主题</h4><p>设置、主题、获取主题、下载主题文件夹、放到主题文件夹</p>
+<h3 id="二、编程语言"><a href="#二、编程语言" class="headerlink" title="二、编程语言"></a>二、编程语言</h3><h4 id="1、什么是编程语言？"><a href="#1、什么是编程语言？" class="headerlink" title="1、什么是编程语言？"></a>1、什么是编程语言？</h4><p>人与计算机之间沟通的媒介</p>
+<h4 id="2、什么是编程？"><a href="#2、什么是编程？" class="headerlink" title="2、什么是编程？"></a>2、什么是编程？</h4><p>翻译的过程</p>
+<h4 id="3、为什么会出现编程语言？"><a href="#3、为什么会出现编程语言？" class="headerlink" title="3、为什么会出现编程语言？"></a>3、为什么会出现编程语言？</h4><h3 id="三、计算机组成原理"><a href="#三、计算机组成原理" class="headerlink" title="三、计算机组成原理"></a>三、计算机组成原理</h3><h4 id="1、什么是计算机？"><a href="#1、什么是计算机？" class="headerlink" title="1、什么是计算机？"></a>1、什么是计算机？</h4><p>通电的智能设备，批量执行命令</p>
+<h4 id="2、为什么要发明计算机？"><a href="#2、为什么要发明计算机？" class="headerlink" title="2、为什么要发明计算机？"></a>2、为什么要发明计算机？</h4><p>干活</p>
+<h4 id="3、计算机的五大组成部分？"><a href="#3、计算机的五大组成部分？" class="headerlink" title="3、计算机的五大组成部分？"></a>3、计算机的五大组成部分？</h4><p>控制器、运算器、存储器、输入输出设备</p>
+<h4 id="4、计算机三大核心硬件"><a href="#4、计算机三大核心硬件" class="headerlink" title="4、计算机三大核心硬件"></a>4、计算机三大核心硬件</h4><p>CPU、硬盘、内存</p>
+<h4 id="5、进制"><a href="#5、进制" class="headerlink" title="5、进制"></a>5、进制</h4><h4 id="6、计算机的操作系统"><a href="#6、计算机的操作系统" class="headerlink" title="6、计算机的操作系统"></a>6、计算机的操作系统</h4><h5 id="1、操作系统的由来"><a href="#1、操作系统的由来" class="headerlink" title="1、操作系统的由来"></a>1、操作系统的由来</h5><p>简化硬件操作，提供统一接口供应用程序使用</p>
+<h5 id="2、常见的操作系统"><a href="#2、常见的操作系统" class="headerlink" title="2、常见的操作系统"></a>2、常见的操作系统</h5><ul>
+<li><p>客户端Pc</p>
+<p>Windows、MacOS、linux</p>
+</li>
+<li><p>移动端App</p>
+<p>安卓、IOS、鸿蒙</p>
+</li>
+</ul>
+<h5 id="3、软件"><a href="#3、软件" class="headerlink" title="3、软件"></a>3、软件</h5><p>系统软件、应用软件</p>
+<h4 id="7、计算机系统的三层架构"><a href="#7、计算机系统的三层架构" class="headerlink" title="7、计算机系统的三层架构"></a>7、计算机系统的三层架构</h4><p>硬件层、操作系统层、应用层</p>
+<h4 id="8、平台"><a href="#8、平台" class="headerlink" title="8、平台"></a>8、平台</h4><p>硬件+操作系统</p>
+<p>Windows 平台、MacOS平台、Linux 平台</p>
+<p>跨平台：一个应用可以在多个平台上面使用</p>
+<p>python跨平台！！</p>
+<h3 id="四、编程语言介绍"><a href="#四、编程语言介绍" class="headerlink" title="四、编程语言介绍"></a>四、编程语言介绍</h3><h4 id="1、什么是编程语言"><a href="#1、什么是编程语言" class="headerlink" title="1、什么是编程语言"></a>1、什么是编程语言</h4><h4 id="2、按照发展阶段"><a href="#2、按照发展阶段" class="headerlink" title="2、按照发展阶段"></a>2、按照发展阶段</h4><h5 id="（1）机器语言"><a href="#（1）机器语言" class="headerlink" title="（1）机器语言"></a>（1）机器语言</h5><p>0、1二进制指令、直接操作底层硬件</p>
+<p>机器语言：执行效率高、开发效率低；跨平台性差：不同的系统需要重新开发；学习成本高</p>
+<h5 id="（2）汇编语言"><a href="#（2）汇编语言" class="headerlink" title="（2）汇编语言"></a>（2）汇编语言</h5><p>1  英文字母 + 特殊字符 表示某部分的机器指令</p>
+<p>2  直接操作底层硬件：执行效率高</p>
+<p>​    操作灵活：可以用英文字母代替机器指令</p>
+<p>​    可执行文件小：编译后的文件小</p>
+<p>​    开发效率低、跨平台性差、复杂度高</p>
+<h5 id="（3）高级语言"><a href="#（3）高级语言" class="headerlink" title="（3）高级语言"></a>（3）高级语言</h5><p>1  开发效率高、执行效率低</p>
+<p>2  分类：</p>
+<p>​    按照翻译方式不同：编译型语言：c、c++、c#、Java</p>
+<p>​     解释型语言：python、go、php</p>
+<p>3  什么是编译型语言？</p>
+<p>将整篇源程序一次翻译成目标代码，然后生成可执行文件</p>
+<p>修改源代码后，需要重新编译整个程序</p>
+<p>执行效率高：执行文件之前先进行编译，执行编译后的文件</p>
+<p>开发效率低：开发程序之后如果修改程序的源代码就需要重新编译然后才能运行</p>
+<p>跨平台性差：先编译（根据操作系统进行文件的编译）</p>
+<p>4  什么是解释型语言？</p>
+<p>逐句翻译源程序中的代码，由解释器逐句执行</p>
+<p>修改源代码后不需要重新编译整个程序，直接执行即可</p>
+<p>执行效率低、开发效率高、具有较强的跨平台性</p>
+<p>开发效率高：写的程序可以边编译边执行，如果其中一段代码报错然后修改，不需要等待所有的内容加载完后再去执行</p>
+<p>跨平台型强：不需要经过编译</p>
+<h5 id="（4）总结"><a href="#（4）总结" class="headerlink" title="（4）总结"></a>（4）总结</h5><p>执行效率：机器语言 &gt; 汇编语言 &gt; 高级语言</p>
+<p>开发效率：机器语言 &lt; 汇编语言 &lt; 高级语言</p>
+<p>跨平台性：解释型语言的跨平台性最高</p>
+<p>首选 python 的原因：极强的跨平台性、解释型语言可以边编译边执行</p>
+<h3 id="五、python"><a href="#五、python" class="headerlink" title="五、python"></a>五、python</h3><h4 id="python的应用领域"><a href="#python的应用领域" class="headerlink" title="python的应用领域"></a>python的应用领域</h4><p>数据分析：python里面有很多第三方模块</p>
+<p>人工智能：同样有很多第三方包</p>
+<p>爬虫：从网页上自动采集数据</p>
+<p>云计算</p>
+<p>web 开发全栈</p>
+<p>图像处理：人脸识别：借助 python 的 opencv 模块进行图像处理和采集</p>
+<h4 id="python解释器的种类"><a href="#python解释器的种类" class="headerlink" title="python解释器的种类"></a>python解释器的种类</h4><p>CPython：基于c语言开发的</p>
+<p>安装比新版本低两个版本的即可</p>
+<h2 id="Day2"><a href="#Day2" class="headerlink" title="Day2"></a>Day2</h2><p>pip.exe 是安装第三方包的时候的工具</p>
+<p>疑惑？把它们区分开来即可。</p>
+<p><img src="/images/image-20260811074053632.png" alt="image-20260811074053632"></p>
+<h3 id="二、python代码的书写方式"><a href="#二、python代码的书写方式" class="headerlink" title="二、python代码的书写方式"></a>二、python代码的书写方式</h3><h4 id="1、在文本文件中书写"><a href="#1、在文本文件中书写" class="headerlink" title="1、在文本文件中书写"></a>1、在文本文件中书写</h4><p>文本文件写代码 –&gt; 改成 python 扩展名 –&gt; 打开终端 –&gt; 输入 python +路径（或者直接拖进来）</p>
+<h4 id="2、在终端执行"><a href="#2、在终端执行" class="headerlink" title="2、在终端执行"></a>2、在终端执行</h4><p><img src="/images/image-20260811080146792.png" alt="image-20260811080146792"></p>
+<p>exit() 退出</p>
+<h4 id="3、pycharm编辑器"><a href="#3、pycharm编辑器" class="headerlink" title="3、pycharm编辑器"></a>3、pycharm编辑器</h4><p><img src="/images/image-20260811080923149.png" alt="image-20260811080923149"></p>
+<p>破解过程中遇到的问题：没有下载完整安装包</p>
+<p><img src="/images/image-20260811083429069.png" alt="image-20260811083429069"></p>
+<p>成功</p>
+<p><img src="/images/image-20260811083524382.png" alt="image-20260811083524382"></p>
+<h3 id="三、补充"><a href="#三、补充" class="headerlink" title="三、补充"></a>三、补充</h3><h4 id="1、pip-换源"><a href="#1、pip-换源" class="headerlink" title="1、pip 换源"></a>1、pip 换源</h4><h5 id="1-为什么要换源？"><a href="#1-为什么要换源？" class="headerlink" title="1  为什么要换源？"></a>1  为什么要换源？</h5><p>pip 安装第三方包的时候会非常慢，甚至可能无法完成</p>
+<h5 id="2-永久换源"><a href="#2-永久换源" class="headerlink" title="2  永久换源"></a>2  永久换源</h5><p>永久的将 pip 源从国外的源切换到国内的源</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple/</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">清华大学: https://pypi.tuna.tsinghua.edu.cn/simple/</span><br><span class="line">阿里云: https://mirrors.aliyun.com/pypi/simple/</span><br><span class="line">豆瓣: https://pypi.douban.com/simple/</span><br><span class="line">中科大: https://pypi.mirrors.ustc.edu.cn/simple/</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">查看当前镜像源</span><br><span class="line">pip config get <span class="keyword">global</span>.index-url</span><br></pre></td></tr></table></figure>
+
+<h5 id="3-临时换源"><a href="#3-临时换源" class="headerlink" title="3  临时换源"></a>3  临时换源</h5><p>(3) 临时换源</p>
+<ul>
+<li>可能当前源无法加载到指定的？？模块？？,于是可以临时切换到其他的源上面？？？</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install 模块名 -i https://pypi.tuna.tsinghua.edu.cn/simple/</span><br></pre></td></tr></table></figure>
+
+<h4 id="2、系统环境和虚拟环境介绍"><a href="#2、系统环境和虚拟环境介绍" class="headerlink" title="2、系统环境和虚拟环境介绍"></a>2、系统环境和虚拟环境介绍</h4><p>都是 python 解释器的环境</p>
+<h5 id="1-系统环境"><a href="#1-系统环境" class="headerlink" title="1  系统环境"></a>1  系统环境</h5><ul>
+<li><p>系统环境是指安装在计算机全局范围内的Python环境。</p>
+</li>
+<li><p>当你在计算机上安装Python时,它会成为系统环境的一部分。</p>
+</li>
+<li><p>-在系统环境中安装的Python解释器和库对整个计算机可见,所有项目都可以访问它们。</p>
+</li>
+</ul>
+<h5 id="2-虚拟环境"><a href="#2-虚拟环境" class="headerlink" title="2  虚拟环境"></a>2  虚拟环境</h5><ul>
+<li>虚拟环境是一种在项目级别隔离Python依赖的方法。</li>
+<li>通过创建虚拟环境,你可以为每个项目设置独立的Python环境,从而解决全局安装可能导致的问题。</li>
+<li>虚拟环境可以包含自己的Python解释器和依赖库,与其他虚拟环境和系统环境隔离开。</li>
+</ul>
+<h5 id="3-开发项目"><a href="#3-开发项目" class="headerlink" title="3  开发项目"></a>3  开发项目</h5><ul>
+<li>有一个项目使用的是Python 310版本的解释器但是使用的Django版本是3.12</li>
+<li>有一个项目使用的是Python 310版本的解释器但是使用的Django版本是5.0</li>
+<li>于是为了给每个项目产生于一个独立的隔离解释器环境就有了虚拟环境</li>
+</ul>
+<h4 id="3、创建虚拟环境的三种方式"><a href="#3、创建虚拟环境的三种方式" class="headerlink" title="3、创建虚拟环境的三种方式"></a>3、创建虚拟环境的三种方式</h4><h5 id="1-venv"><a href="#1-venv" class="headerlink" title="1  venv"></a>1  venv</h5><p>python自带的虚拟环境</p>
+<p>使用：</p>
+<ul>
+<li>打开命令行终端</li>
+<li>导航到项目所在的目录</li>
+<li>运行以下命令创建虚拟环境</li>
+<li>例如：D:\Project\PythonProject\pythonInterpreter&gt;python -m venv first</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python -m venv 虚拟环境名称</span><br></pre></td></tr></table></figure>
+
+<p><img src="/images/image-20260811091139606.png" alt="image-20260811091139606"></p>
+<p><img src="/images/image-20260811092138112.png" alt="image-20260811092138112"></p>
+<p>激活虚拟环境：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">进入Scripts目录下</span><br><span class="line">执行activate  回车</span><br></pre></td></tr></table></figure>
+
+<p>进入虚拟环境之后会在前面显示虚拟环境的名称：(first)</p>
+<p><img src="/images/image-20260811092706878.png" alt="image-20260811092706878"></p>
+<p>装入一个lxml</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install lxml</span><br></pre></td></tr></table></figure>
+
+<p><img src="/images/image-20260811092955679.png" alt="image-20260811092955679"></p>
+<p>退出虚拟环境：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">deactivate</span><br></pre></td></tr></table></figure>
+
+<p>pip list 查看</p>
+<p><img src="/images/image-20260811093233177.png" alt="image-20260811093233177"></p>
+<p>卸载：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip uninstall lxml</span><br></pre></td></tr></table></figure>
+
+<p>pip list 看的是：已经安装的第三方软件包；dir() 看的是：某所有文件！！？？？？</p>
+<h5 id="2-第三方的包：virtualenv"><a href="#2-第三方的包：virtualenv" class="headerlink" title="2  第三方的包：virtualenv"></a>2  第三方的包：virtualenv</h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install virtualenv</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>增加模块, 使虚拟环境在win上更好用</li>
+<li>virtualenvwrapper-win是一个增强模块, 使得在Windows上使用虚拟环境更方便。</li>
+<li>使用以下命令安装virtualenvwrapper-win:</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install virtualenvwrapper-win</span><br></pre></td></tr></table></figure>
+
+<p>配置参数：打开系统环境变量添加一个变量名和变量值</p>
+<ul>
+<li><p>变量名：WORKON_HOME</p>
+</li>
+<li><p>变量值：随便添加一个路径，随便哪个都行</p>
+</li>
+</ul>
+<p><img src="/images/image-20260811095542775.png" alt="image-20260811095542775"></p>
+<ul>
+<li><p>找到Python3的安装目录, 然后进入Scripts文件夹, 双击运行virtualenvwrapper.bat文件。</p>
+</li>
+<li><p>例如:E:\Python310\Scripts</p>
+</li>
+<li><p>通过运行该脚本, 可以同步配置Virtualenv的使用环境和命令。</p>
+</li>
+<li><p>创建虚拟环境</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkvirtualenv 虚拟环境名字</span><br><span class="line">例如：mkvirtualenv second</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p><img src="/images/image-20260811095826904.png" alt="image-20260811095826904"></p>
+<p>查看全局有哪些环境变量：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">workon</span><br></pre></td></tr></table></figure>
+
+<p><img src="/images/image-20260811100647807.png" alt="image-20260811100647807"></p>
+<h4 id="4、pycharm补充"><a href="#4、pycharm补充" class="headerlink" title="4、pycharm补充"></a>4、pycharm补充</h4><p><img src="/images/image-20260811101130178.png" alt="image-20260811101130178"></p>
+<p><img src="/images/image-20260811101957795.png" alt="image-20260811101957795"></p>
+<p>汉化：</p>
+<p><img src="/images/image-20260811104826017.png" alt="image-20260811104826017"></p>
+<p>快捷键：</p>
+<ul>
+<li>Ctrl + &#x2F;: 行注释&#x2F;取消行注释</li>
+<li>Ctrl + Alt + L: 代码格式化</li>
+<li>Tab &#x2F; Shift +Tab: 缩进、不缩进当前行</li>
+<li>Ctrl+X&#x2F;Shift+Delete: 剪切当前行或选定的代码块到剪贴板</li>
+<li>Ctrl+C&#x2F;Ctrl+Insert: 复制当前行或选定的代码块到剪贴板</li>
+<li>Ctrl+V&#x2F;Shift+Insert: 从剪贴板粘贴</li>
+<li>Ctrl + B &#x2F; Ctrl + Click: 跳转到声明</li>
+<li>Ctrl左键：悬浮&#x2F;单击鼠标左键, 显示简介&#x2F;进入代码定义</li>
+<li>Ctrl + D: 复制选定的区域或行</li>
+</ul>
+<h3 id="python学习"><a href="#python学习" class="headerlink" title="python学习"></a>python学习</h3><h4 id="1、变量的三大特性："><a href="#1、变量的三大特性：" class="headerlink" title="1、变量的三大特性："></a>1、变量的三大特性：</h4><p>变量内存地址、变量类型、变量值</p>
+<p>查看变量类型：type()</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">print</span>(<span class="built_in">type</span>(userName))</span><br></pre></td></tr></table></figure>
+
+<p>查看变量内存地址：id()</p>
+<p>重新运行地址会发生变化！</p>
+<p>每一次在运行代码的时候都会重新开辟内存空间存储变量值</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">print</span>(<span class="built_in">id</span>(userName))</span><br></pre></td></tr></table></figure>
+
+<h4 id="2、常量"><a href="#2、常量" class="headerlink" title="2、常量"></a>2、常量</h4><p>用全大写的字母代表常量</p>
+<p>在 python 中的常量被定义后是可以改变的，但是我们都遵循不变的规则；在 Java、go 中定义常量后是不能修改的。</p>
+<p>？？？？那怎么判断呢？？？？</p>
+<p><img src="/images/image-20260811113722340.png" alt="image-20260811113722340"></p>
+<p>kimi给出的答案：了解即可</p>
+<p>Python 没有内置的常量机制，只能通过命名约定和语言特性模拟来实现。</p>
+<table>
+<thead>
+<tr>
+<th>方式</th>
+<th>强制程度</th>
+<th align="left">示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>全大写命名约定</td>
+<td>无强制，靠自觉</td>
+<td align="left">MAX_SIZE &#x3D; 100</td>
+</tr>
+<tr>
+<td>typing.Final</td>
+<td>静态检查报错，运行时可改</td>
+<td align="left">MAX_SIZE: Final &#x3D; 100</td>
+</tr>
+<tr>
+<td>Enum</td>
+<td>运行时真正不可改</td>
+<td align="left">class Color(Enum): RED &#x3D; 1</td>
+</tr>
+<tr>
+<td>@dataclass(frozen&#x3D;True)</td>
+<td>运行时不可改（抛 FrozenInstanceError）</td>
+<td align="left">冻结数据类</td>
+</tr>
+</tbody></table>
+<h4 id="3、PEP8规范"><a href="#3、PEP8规范" class="headerlink" title="3、PEP8规范"></a>3、PEP8规范</h4><p>官方提供的命名规范</p>
+<h4 id="4、八大基本数据类型"><a href="#4、八大基本数据类型" class="headerlink" title="4、八大基本数据类型"></a>4、八大基本数据类型</h4><p>整数（int）、浮点数（float）、字符串（str）、列表（list）、字典（dict）、布尔（bool）、元组（tuple）、集合（set）</p>
+<h5 id="1-字符串-str"><a href="#1-字符串-str" class="headerlink" title="1  字符串 str"></a>1  字符串 str</h5><ul>
+<li>单引号包裹起来的字符</li>
+<li>双引号包裹起来的字符</li>
+<li>三个单引号包裹起来的字符（可以多行）</li>
+<li>三个双引号包裹起来的字符</li>
+</ul>
+<p>嵌套的时候用不同的</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 补充：字符串的使用方法</span></span><br><span class="line"><span class="comment"># 数字进行乘法 ---&gt; 数字相乘得到乘法的结果</span></span><br><span class="line"><span class="built_in">print</span>(<span class="number">2</span>*<span class="number">2</span>) <span class="comment"># 4</span></span><br><span class="line"><span class="comment"># 字符串 * 数字 ---&gt; 当前字符串被重复出现指定次数</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;d&quot;</span> * <span class="number">5</span>) <span class="comment"># ddddd</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 数字进行加法----&gt; 得到加法的结果</span></span><br><span class="line"><span class="built_in">print</span>(<span class="number">1</span> + <span class="number">1</span>) <span class="comment"># 2</span></span><br><span class="line"><span class="comment"># 字符串 + 数字 ----&gt; 不行 因为类型不一样无法运算</span></span><br><span class="line"><span class="comment"># 字符串 + 字符串 ----- &gt; 将两个字符拼接到一起</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;d&quot;</span> + <span class="string">&#x27;1&#x27;</span>) <span class="comment"># d1</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 正向索引取值 ， 索引下表从 0 开始</span></span><br><span class="line"><span class="comment"># dream</span></span><br><span class="line"><span class="comment"># d r e am</span></span><br><span class="line"><span class="comment"># 0 1 2 3 4</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;dream&#x27;</span>[<span class="number">0</span>]) <span class="comment"># d</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;dream&#x27;</span>[<span class="number">1</span>]) <span class="comment"># r# 负向索引取值 ， 索引下表就从 -1</span></span><br><span class="line"><span class="comment"># d r e a m |</span></span><br><span class="line"><span class="comment"># -5 -4 -3 -2 -1</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;dream&#x27;</span>[-<span class="number">1</span>]) <span class="comment"># m</span></span><br></pre></td></tr></table></figure>
+
+<p>百分号占位：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">sentence_one = <span class="string">&quot;my name is dream ,my age is 18 &quot;</span></span><br><span class="line">sentence_two = <span class="string">&quot;my name is hope ,my age is28 &quot;</span></span><br><span class="line">sentence_three = <span class="string">&quot;my name is opp ,my age is 38 &quot;</span></span><br><span class="line"><span class="comment"># 不断地修改同一快代码 为了方便于是就有了格式化输出语法</span></span><br><span class="line"><span class="comment"># （1）方案一 % 站位</span></span><br><span class="line">sentence_four = <span class="string">&quot;my name is %s ,my age is %s&quot;</span></span><br><span class="line"><span class="built_in">print</span>(sentence_four % (<span class="string">&quot;dream&quot;</span>, <span class="number">18</span>))</span><br><span class="line"><span class="built_in">print</span>(sentence_four % (<span class="string">&quot;hope&quot;</span>, <span class="number">28</span>))</span><br><span class="line"><span class="comment"># %s: 字符串</span></span><br><span class="line"><span class="comment"># %d: 整数</span></span><br><span class="line"><span class="comment"># %f: 浮点数</span></span><br><span class="line"><span class="comment"># %x:十六进制整数</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># (2) format方法输出：用 &#123;&#125; 站位</span></span><br><span class="line">sentence = <span class="string">&quot;my name is &#123;&#125;, my age is &#123;&#125;&quot;</span></span><br><span class="line"><span class="built_in">print</span>(sentence.<span class="built_in">format</span>(*args: <span class="string">&quot;dream&quot;</span>, <span class="string">&quot;18&quot;</span>))</span><br><span class="line"></span><br><span class="line"><span class="comment"># (3) 可以用关键字占据指定位置 &#123;name&#125; 站位 在传递参数的时候要按照关键字传参数</span></span><br><span class="line">sentence = <span class="string">&quot;my name is &#123;name&#125;, my age is &#123;age&#125;&quot;</span></span><br><span class="line"><span class="built_in">print</span>(sentence.<span class="built_in">format</span>(name=<span class="string">&quot;dream&quot;</span>, age=<span class="string">&quot;18&quot;</span>))</span><br><span class="line"></span><br><span class="line"><span class="comment"># (3) 方案三: f&quot;&#123;name&#125;&quot;</span></span><br><span class="line">name = <span class="string">&quot;dream&quot;</span></span><br><span class="line">age = <span class="string">&quot;18&quot;</span></span><br><span class="line">sentence = <span class="string">f&quot;my nameis <span class="subst">&#123;name&#125;</span>, my age is <span class="subst">&#123;age&#125;</span>&quot;</span></span><br><span class="line"><span class="built_in">print</span>(sentence)</span><br></pre></td></tr></table></figure>
+
+<h5 id="2-列表类型"><a href="#2-列表类型" class="headerlink" title="2  列表类型"></a>2  列表类型</h5><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">userNames = [<span class="string">&quot;aa&quot;</span>, <span class="string">&quot;bb&quot;</span>, <span class="string">&quot;cc&quot;</span>]</span><br><span class="line"><span class="built_in">print</span>(userNames[<span class="number">0</span>])</span><br><span class="line"><span class="built_in">print</span>(userNames)</span><br></pre></td></tr></table></figure>
+
+<p>列表嵌套：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">data_info = [<span class="string">&quot;aaa&quot;</span>, <span class="string">&quot;bbb&quot;</span>, <span class="string">&quot;ccc&quot;</span>, [<span class="number">18</span>, <span class="number">19</span>, <span class="number">20</span>, [<span class="string">&quot;d&quot;</span>, <span class="string">&quot;e&quot;</span>, <span class="string">&quot;f&quot;</span>]]]</span><br><span class="line"><span class="built_in">print</span>(data_info)</span><br><span class="line"><span class="built_in">print</span>(data_info[<span class="number">3</span>][<span class="number">3</span>][<span class="number">0</span>])</span><br></pre></td></tr></table></figure>
+
+<p>Python 列表 vs 其他语言的数组：</p>
+<p>kimi code的答案：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 1. 类型可以混装</span></span><br><span class="line">data = [<span class="string">&quot;dream&quot;</span>, <span class="number">18</span>, [<span class="number">1</span>, <span class="number">2</span>], <span class="number">3.14</span>]  <span class="comment"># 字符串、整数、列表、浮点数随便放</span></span><br><span class="line"><span class="comment"># Java/C 的数组必须同类型：int[] arr 只能装 int。Python 列表什么都能装，因为它存的其实是对象的引用（指针），不是值本身。</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 长度动态变化</span></span><br><span class="line">lst = [<span class="number">1</span>, <span class="number">2</span>]</span><br><span class="line">lst.append(<span class="number">3</span>)    <span class="comment"># [1, 2, 3]，随时加长</span></span><br><span class="line">lst.pop()        <span class="comment"># 随时缩短</span></span><br><span class="line"><span class="comment"># C/Java 数组创建时长度就定死了，想扩容得新建数组再拷贝（Java 的 ArrayList 才是对标 Python list 的）</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 自带丰富的操作</span></span><br><span class="line">lst[<span class="number">1</span>:<span class="number">3</span>]      <span class="comment"># 切片，取子列表</span></span><br><span class="line">lst[-<span class="number">1</span>]       <span class="comment"># 负数索引，取倒数第一个</span></span><br><span class="line"><span class="number">3</span> <span class="keyword">in</span> lst      <span class="comment"># 判断是否存在</span></span><br><span class="line"><span class="built_in">len</span>(lst)      <span class="comment"># 长度</span></span><br><span class="line"><span class="comment"># 其他语言的数组大多只有按下标取值这一个本事，切片、in 这些都没有</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Python 也有真正的&quot;数组&quot;——array 模块和 NumPy 的 ndarray，它们才是同类型、连续内存、高性能的，用于数值计算</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 另外正因为存的是引用，嵌套列表有浅拷贝的坑：</span></span><br><span class="line">a = [<span class="number">1</span>, [<span class="number">2</span>, <span class="number">3</span>]]</span><br><span class="line">b = a.copy()</span><br><span class="line">b[<span class="number">1</span>].append(<span class="number">4</span>)</span><br><span class="line"><span class="built_in">print</span>(a)  <span class="comment"># [1, [2, 3, 4]] —— a 也被改了！</span></span><br><span class="line"><span class="comment"># 要完全独立得用 copy.deepcopy()</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="3-字典类型"><a href="#3-字典类型" class="headerlink" title="3  字典类型"></a>3  字典类型</h5><p>语法：{“key” : “value”}</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">person_info = &#123;</span><br><span class="line">    <span class="string">&quot;name&quot;</span>: <span class="string">&quot;jack&quot;</span>,</span><br><span class="line">    <span class="string">&quot;age&quot;</span>: <span class="number">20</span>,</span><br><span class="line">    <span class="string">&quot;gender&quot;</span>: <span class="string">&quot;male&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment"># 存储数据是为了取数据去用</span></span><br><span class="line"><span class="comment"># 方式一： 字典[&quot;key&quot;]</span></span><br><span class="line"><span class="built_in">print</span>(person_info[<span class="string">&quot;name&quot;</span>])</span><br><span class="line"><span class="built_in">print</span>(person_info[<span class="string">&quot;age&quot;</span>])</span><br><span class="line"><span class="comment"># 方式二: 字典.get(&quot;key&quot;)</span></span><br><span class="line"><span class="built_in">print</span>(person_info.get(<span class="string">&quot;gender&quot;</span>))</span><br><span class="line"></span><br><span class="line"><span class="comment"># 方式一： 字典[&quot;key&quot;] 如果字典中没有指定的键就会报错</span></span><br><span class="line"><span class="built_in">print</span>(person_info[<span class="string">&quot;hobby&quot;</span>])</span><br><span class="line"><span class="comment"># 方式二：字典.get(&quot;key&quot;)</span></span><br><span class="line"><span class="built_in">print</span>(person_info.get(<span class="string">&quot;hobby&quot;</span>)) <span class="comment"># None</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="4-列表和字典"><a href="#4-列表和字典" class="headerlink" title="4  列表和字典"></a>4  列表和字典</h5><h6 id="解决的问题？"><a href="#解决的问题？" class="headerlink" title="解决的问题？"></a>解决的问题？</h6><p>为什么python中有了列表类型，还要有字典类型呢，解决了什么问题？</p>
+<ul>
+<li>列表用”位置”找数据，字典用”名字”找数据。 当数据有明确含义时，按下标找会很难用。</li>
+</ul>
+<h6 id="列表和字典的嵌套"><a href="#列表和字典的嵌套" class="headerlink" title="列表和字典的嵌套"></a>列表和字典的嵌套</h6><p>遇到字典用键，遇到列表用下标，一层一层往里剥</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">info = &#123;</span><br><span class="line">    <span class="string">&quot;name&quot;</span>: <span class="string">&quot;jack&quot;</span>,</span><br><span class="line">    <span class="string">&quot;address&quot;</span>: &#123;</span><br><span class="line">        <span class="string">&quot;country&quot;</span>: <span class="string">&quot;china&quot;</span>,</span><br><span class="line">        <span class="string">&quot;info&quot;</span>: [<span class="number">111</span>, <span class="number">222</span>, &#123;<span class="string">&quot;编号&quot;</span>: <span class="string">&quot;888&quot;</span>, <span class="string">&quot;hobby&quot;</span>: [<span class="string">&quot;music&quot;</span>, <span class="string">&quot;run&quot;</span>, <span class="string">&quot;draw&quot;</span>]&#125;]</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(info[<span class="string">&quot;name&quot;</span>])</span><br><span class="line"><span class="built_in">print</span>(info[<span class="string">&quot;address&quot;</span>])</span><br><span class="line"><span class="built_in">print</span>(info[<span class="string">&quot;address&quot;</span>][<span class="string">&quot;country&quot;</span>])</span><br><span class="line"><span class="built_in">print</span>(info[<span class="string">&quot;address&quot;</span>][<span class="string">&quot;info&quot;</span>][<span class="number">0</span>])</span><br><span class="line"><span class="built_in">print</span>(info[<span class="string">&quot;address&quot;</span>][<span class="string">&quot;info&quot;</span>][<span class="number">2</span>])</span><br><span class="line"><span class="built_in">print</span>(info[<span class="string">&quot;address&quot;</span>][<span class="string">&quot;info&quot;</span>][<span class="number">2</span>][<span class="string">&quot;hobby&quot;</span>][<span class="number">0</span>])</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;my name is <span class="subst">&#123;info[<span class="string">&quot;name&quot;</span>]&#125;</span> and my county is <span class="subst">&#123;info[<span class="string">&quot;address&quot;</span>][<span class="string">&quot;country&quot;</span>]&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+</div>
+  <nav class="article-end" aria-label="继续阅读"><a href="/topics/">浏览学习专题 <span aria-hidden="true">↗</span></a><a href="#main-content">回到顶部 ↑</a></nav>
+</article>
+
+</div>
+</main>
+
+<footer class="footer linx-footer">
+  <span>记录学习的过程，也记录慢慢想明白的事。</span>
+  <span><a href="https://github.com/dubingjie" target="_blank" rel="noopener noreferrer">GitHub</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://github.com/wu3227834/hexo-theme-aerlume">Aerlume</a></span>
+</footer>
+
+
+<script src="/js/linx.js" defer data-root="/" data-search="/search.json"></script>
+
+<script src="/js/clipboard.js" defer></script>
+<script src="/js/lightbox.js" defer></script>
+
+</body>
+</html>

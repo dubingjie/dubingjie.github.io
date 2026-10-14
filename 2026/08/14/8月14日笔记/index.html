@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>网络排查入门：ping、nslookup 与 SSH · LinX的世界</title>
+  <meta name="description" content="区分连通性测试、域名解析和远程登录，记录三个常用命令的用途。">
+  <link rel="canonical" href="https://dubingjie.github.io/2026/08/14/8%E6%9C%8814%E6%97%A5%E7%AC%94%E8%AE%B0/">
+  <meta property="og:title" content="网络排查入门：ping、nslookup 与 SSH · LinX的世界">
+  <meta property="og:description" content="区分连通性测试、域名解析和远程登录，记录三个常用命令的用途。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dubingjie.github.io/2026/08/14/8%E6%9C%8814%E6%97%A5%E7%AC%94%E8%AE%B0/">
+  <meta property="og:site_name" content="LinX的世界">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  
+<link rel="stylesheet" href="/css/aerlume.css">
+
+  <style>@font-face{font-family:'Aerlume Local';src:url('/fonts/TsangerYuYangT_W03_W03.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}:root{--aerlume-local-font:'Aerlume Local'}</style>
+  
+<link rel="stylesheet" href="/css/linx.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="reading-page">
+<a class="skip-link" href="#main-content">跳到正文</a>
+
+  <main class="reading-shell" id="main-content">
+<div class="reading-tools">
+  <a class="reading-back" data-reading-back href="/"><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18"/></svg><span>返回</span></a>
+</div>
+<div class="article-reading-layout has-toc">
+  
+  <details class="reading-toc" id="reading-toc" open>
+    <summary><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="toc-open-label">目录</span><span class="toc-hide-label">隐藏 ←</span><span class="toc-show-label">目录 →</span></summary>
+    <nav class="reading-toc-panel" aria-label="文章目录"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1%E3%80%81ping-%E5%91%BD%E4%BB%A4"><span class="toc-text">1、ping 命令</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2%E3%80%81nslookup-%E5%91%BD%E4%BB%A4"><span class="toc-text">2、nslookup 命令</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3%E3%80%81ssh"><span class="toc-text">3、ssh</span></a></li></ol></nav>
+  </details>
+  
+<article class="post-container">
+  <header class="article-header">
+    <a class="article-category" href="/topics/#network">Linux 与网络</a>
+    <h1 class="post-title">网络排查入门：ping、nslookup 与 SSH</h1>
+    <div class="post-meta"><time datetime="2026-08-14T22:00:00.000Z">2026-08-14</time><span aria-hidden="true"> / </span><a href="/tags/ping/">ping</a><span aria-hidden="true"> · </span><a href="/tags/DNS/">DNS</a><span aria-hidden="true"> · </span><a href="/tags/SSH/">SSH</a></div>
+    <p class="article-description">区分连通性测试、域名解析和远程登录，记录三个常用命令的用途。</p>
+  </header>
+  <div class="post-content"><h2 id="1、ping-命令"><a href="#1、ping-命令" class="headerlink" title="1、ping 命令"></a>1、ping 命令</h2><p>ping 命令是做什么用的？</p>
+<p>ping 命令是用来诊断网络的，测试我的主机与目标主机（用 IP或者域名）网络是否连通的</p>
+<p>在命令行下使用：</p>
+<p>ping 域名：看它解析到了哪个 IP</p>
+<p>ping IP 地址：验证网络是否连通</p>
+<p>ping 127.0.0.1      本机</p>
+<p>ping 114.114.114.114     外网</p>
+<p>ping baidu.com   域名</p>
+<h2 id="2、nslookup-命令"><a href="#2、nslookup-命令" class="headerlink" title="2、nslookup 命令"></a>2、nslookup 命令</h2><p>用来查询DNS域名解析的过程</p>
+<p>nslookup baidu.com        域名到IP</p>
+<p>nslookup baidu.com 114.114.114.114     指定用114DNS服务器查询</p>
+<h2 id="3、ssh"><a href="#3、ssh" class="headerlink" title="3、ssh"></a>3、ssh</h2><p>ssh 是远程操作另一台计算机的网络协议，而且全程加密</p>
+<p>ssh 做了三件事：远程操纵计算机、加密、判断是不是服务器发给你的信息（防止被骗）</p>
+<p>密码登录 VS 密钥登录：</p>
+<p>密码登录：输入密码</p>
+<p>密钥登录：自己配置一把锁和钥匙，钥匙自己留着，锁安装到服务器上</p>
+<p>生成密钥用：ssh-keygen.exe</p>
+</div>
+  <nav class="article-end" aria-label="继续阅读"><a href="/topics/">浏览学习专题 <span aria-hidden="true">↗</span></a><a href="#main-content">回到顶部 ↑</a></nav>
+</article>
+
+</div>
+</main>
+
+<footer class="footer linx-footer">
+  <span>记录学习的过程，也记录慢慢想明白的事。</span>
+  <span><a href="https://github.com/dubingjie" target="_blank" rel="noopener noreferrer">GitHub</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://github.com/wu3227834/hexo-theme-aerlume">Aerlume</a></span>
+</footer>
+
+
+<script src="/js/linx.js" defer data-root="/" data-search="/search.json"></script>
+
+<script src="/js/clipboard.js" defer></script>
+<script src="/js/lightbox.js" defer></script>
+
+</body>
+</html>

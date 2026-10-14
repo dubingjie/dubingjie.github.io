@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Python 变量与内存模型：对象引用、深浅拷贝与垃圾回收 · LinX的世界</title>
+  <meta name="description" content="借助标签与对象的类比理解变量、可变性和函数传参，梳理深浅拷贝、循环引用、垃圾回收以及元组和字典表达式。">
+  <link rel="canonical" href="https://dubingjie.github.io/2026/09/23/python-memory-references-copy-gc/">
+  <meta property="og:title" content="Python 变量与内存模型：对象引用、深浅拷贝与垃圾回收 · LinX的世界">
+  <meta property="og:description" content="借助标签与对象的类比理解变量、可变性和函数传参，梳理深浅拷贝、循环引用、垃圾回收以及元组和字典表达式。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dubingjie.github.io/2026/09/23/python-memory-references-copy-gc/">
+  <meta property="og:site_name" content="LinX的世界">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  
+<link rel="stylesheet" href="/css/aerlume.css">
+
+  <style>@font-face{font-family:'Aerlume Local';src:url('/fonts/TsangerYuYangT_W03_W03.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}:root{--aerlume-local-font:'Aerlume Local'}</style>
+  
+<link rel="stylesheet" href="/css/linx.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="reading-page">
+<a class="skip-link" href="#main-content">跳到正文</a>
+
+  <main class="reading-shell" id="main-content">
+<div class="reading-tools">
+  <a class="reading-back" data-reading-back href="/"><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18"/></svg><span>返回</span></a>
+</div>
+<div class="article-reading-layout has-toc">
+  
+  <details class="reading-toc" id="reading-toc" open>
+    <summary><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="toc-open-label">目录</span><span class="toc-hide-label">隐藏 ←</span><span class="toc-show-label">目录 →</span></summary>
+    <nav class="reading-toc-panel" aria-label="文章目录"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8F%98%E9%87%8F%E4%B8%8E%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B"><span class="toc-text">变量与内存模型</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%8F%98%E9%87%8F%E6%98%AF%E2%80%9D%E6%A0%87%E7%AD%BE%E2%80%9D%EF%BC%8C%E4%B8%8D%E6%98%AF%E2%80%9D%E7%9B%92%E5%AD%90%E2%80%9D"><span class="toc-text">一、变量是”标签”，不是”盒子”</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#a-10-%E5%8F%91%E7%94%9F%E4%BA%86%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="toc-text">a &#x3D; 10 发生了什么？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#a-20-%E5%8F%91%E7%94%9F%E4%BA%86%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="toc-text">a &#x3D; 20 发生了什么？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A4%9A%E4%B8%AA%E6%A0%87%E7%AD%BE%E6%8C%87%E5%90%91%E5%90%8C%E4%B8%80%E4%B8%AA%E4%B8%9C%E8%A5%BF"><span class="toc-text">多个标签指向同一个东西</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%B1%BB%E6%AF%94"><span class="toc-text">类比</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%A0%88%E5%8C%BA-vs-%E5%A0%86%E5%8C%BA"><span class="toc-text">二、栈区 vs 堆区</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%B1%BB%E6%AF%94-1"><span class="toc-text">类比</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E7%90%86%E8%A7%A3"><span class="toc-text">关键理解</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E5%8F%AF%E5%8F%98-vs-%E4%B8%8D%E5%8F%AF%E5%8F%98%EF%BC%88%E5%88%86%E6%B0%B4%E5%B2%AD%EF%BC%89"><span class="toc-text">三、可变 vs 不可变（分水岭）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8D%E5%8F%AF%E5%8F%98%EF%BC%9A%E6%95%B0%E5%AD%97%E3%80%81%E5%AD%97%E7%AC%A6%E4%B8%B2%E3%80%81%E5%85%83%E7%BB%84"><span class="toc-text">不可变：数字、字符串、元组</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%AF%E5%8F%98%EF%BC%9A%E5%88%97%E8%A1%A8%E3%80%81%E5%AD%97%E5%85%B8%E3%80%81%E9%9B%86%E5%90%88"><span class="toc-text">可变：列表、字典、集合</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%AA%8C%E8%AF%81"><span class="toc-text">验证</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%A3%E8%AF%80"><span class="toc-text">口诀</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%87%BD%E6%95%B0%E4%BC%A0%E5%8F%82%EF%BC%88pass-by-object-reference%EF%BC%89"><span class="toc-text">四、函数传参（pass by object reference）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%A3%E8%AF%80-1"><span class="toc-text">口诀</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E7%A7%8D%E6%83%85%E5%86%B5"><span class="toc-text">三种情况</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%8F%E5%85%B8%E9%99%B7%E9%98%B1"><span class="toc-text">经典陷阱</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%BB%98%E8%AE%A4%E5%8F%82%E6%95%B0%E5%A4%A7%E5%9D%91"><span class="toc-text">默认参数大坑</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AF%B9%E6%AF%94%E5%85%B6%E4%BB%96%E8%AF%AD%E8%A8%80"><span class="toc-text">对比其他语言</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E6%B7%B1%E6%B5%85%E6%8B%B7%E8%B4%9D"><span class="toc-text">五、深浅拷贝</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%A3%E8%AF%80-2"><span class="toc-text">口诀</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B5%85%E6%8B%B7%E8%B4%9D%E7%9A%84%E5%86%99%E6%B3%95%EF%BC%88%E5%85%A8%E9%83%BD%E5%8F%AA%E5%A4%8D%E5%88%B6%E4%B8%80%E5%B1%82%EF%BC%89"><span class="toc-text">浅拷贝的写法（全都只复制一层）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%99%E4%BA%9B%E5%86%99%E6%B3%95%E4%B8%80%E8%A7%88"><span class="toc-text">这些写法一览</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B5%85%E6%8B%B7%E8%B4%9D%E7%9A%84%E5%9D%91"><span class="toc-text">浅拷贝的坑</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B7%B1%E6%8B%B7%E8%B4%9D"><span class="toc-text">深拷贝</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%AA%8C%E8%AF%81-1"><span class="toc-text">验证</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E7%94%A8%E5%93%AA%E4%B8%AA"><span class="toc-text">什么时候用哪个</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8D%E5%8F%AF%E5%8F%98%E5%AF%B9%E8%B1%A1%E7%9A%84%E6%8B%B7%E8%B4%9D"><span class="toc-text">不可变对象的拷贝</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E5%BE%AA%E7%8E%AF%E5%BC%95%E7%94%A8"><span class="toc-text">六、循环引用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%93%E6%9E%84"><span class="toc-text">结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E6%98%AF%E9%BA%BB%E7%83%A6%EF%BC%9F"><span class="toc-text">为什么是麻烦？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#deepcopy-%E6%80%8E%E4%B9%88%E8%A7%A3%E5%86%B3%EF%BC%9F"><span class="toc-text">deepcopy 怎么解决？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%B1%BB%E6%AF%94-2"><span class="toc-text">类比</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%8E%B0%E5%AE%9E%E4%B8%AD%E7%9A%84%E5%BE%AA%E7%8E%AF%E5%BC%95%E7%94%A8"><span class="toc-text">现实中的循环引用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E4%B8%89%E6%9C%BA%E5%88%B6"><span class="toc-text">七、垃圾回收三机制</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E8%80%85%E5%85%B3%E7%B3%BB"><span class="toc-text">三者关系</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%A3%E8%AF%80-3"><span class="toc-text">口诀</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BC%95%E7%94%A8%E8%AE%A1%E6%95%B0"><span class="toc-text">引用计数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%87%E8%AE%B0%E6%B8%85%E9%99%A4"><span class="toc-text">标记清除</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%86%E4%BB%A3%E5%9B%9E%E6%94%B6"><span class="toc-text">分代回收</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%89%8B%E5%8A%A8%E5%B9%B2%E9%A2%84"><span class="toc-text">手动干预</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BE%AA%E7%8E%AF%E5%BC%95%E7%94%A8%E5%AF%BC%E8%87%B4%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F"><span class="toc-text">循环引用导致内存泄漏</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%81%BF%E5%85%8D%E5%BE%AA%E7%8E%AF%E5%BC%95%E7%94%A8"><span class="toc-text">避免循环引用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E5%AE%8C%E6%95%B4%E6%B5%81%E7%A8%8B"><span class="toc-text">八、完整流程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%8C%E6%95%B4%E6%B5%81%E7%A8%8B%E5%9B%BE"><span class="toc-text">完整流程图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E5%85%83%E7%BB%84-%E5%AD%97%E5%85%B8%E5%88%A4%E6%96%AD%E8%A1%A8%E8%BE%BE%E5%BC%8F"><span class="toc-text">九、元组 &#x2F; 字典判断表达式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%83%E7%BB%84%E5%88%A4%E6%96%AD"><span class="toc-text">元组判断</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AD%97%E5%85%B8%E5%88%A4%E6%96%AD"><span class="toc-text">字典判断</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AD%97%E5%85%B8%E6%8E%A8%E5%AF%BC%E5%BC%8F"><span class="toc-text">字典推导式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%83%E7%BB%84-vs-%E5%AD%97%E5%85%B8-%E5%AF%B9%E6%AF%94"><span class="toc-text">元组 vs 字典 对比</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%98%93%E6%B7%B7%E7%82%B9%EF%BC%9A%E5%85%83%E7%BB%84%E6%8E%A8%E5%AF%BC%E5%BC%8F"><span class="toc-text">易混点：元组推导式</span></a></li></ol></li></ol></li></ol></nav>
+  </details>
+  
+<article class="post-container">
+  <header class="article-header">
+    <a class="article-category" href="/topics/#python">Python</a>
+    <h1 class="post-title">Python 变量与内存模型：对象引用、深浅拷贝与垃圾回收</h1>
+    <div class="post-meta"><time datetime="2026-09-23T00:00:00.000Z">2026-09-23</time><span aria-hidden="true"> / </span><a href="/tags/Python/">Python</a><span aria-hidden="true"> · </span><a href="/tags/%E5%86%85%E5%AD%98/">内存</a><span aria-hidden="true"> · </span><a href="/tags/%E5%AF%B9%E8%B1%A1%E5%BC%95%E7%94%A8/">对象引用</a><span aria-hidden="true"> · </span><a href="/tags/%E6%B7%B1%E6%B5%85%E6%8B%B7%E8%B4%9D/">深浅拷贝</a><span aria-hidden="true"> · </span><a href="/tags/%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6/">垃圾回收</a></div>
+    <p class="article-description">借助标签与对象的类比理解变量、可变性和函数传参，梳理深浅拷贝、循环引用、垃圾回收以及元组和字典表达式。</p>
+  </header>
+  <div class="post-content"><h1 id="变量与内存模型"><a href="#变量与内存模型" class="headerlink" title="变量与内存模型"></a>变量与内存模型</h1><blockquote>
+<p>这是你最深入、卡点最多的一条线，建议重点复习。</p>
+</blockquote>
+<h2 id="一、变量是”标签”，不是”盒子”"><a href="#一、变量是”标签”，不是”盒子”" class="headerlink" title="一、变量是”标签”，不是”盒子”"></a>一、变量是”标签”，不是”盒子”</h2><p><strong>核心结论</strong>：Python 变量是贴在数据上的标签，不是装数据的盒子。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">a = <span class="number">10</span></span><br><span class="line">b = <span class="number">10</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">id</span>(a) == <span class="built_in">id</span>(b))   <span class="comment"># True，指向同一个对象</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="a-10-发生了什么？"><a href="#a-10-发生了什么？" class="headerlink" title="a &#x3D; 10 发生了什么？"></a>a &#x3D; 10 发生了什么？</h3><ol>
+<li>内存里创建对象 <code>10</code></li>
+<li>把标签 <code>a</code> 贴上去</li>
+</ol>
+<h3 id="a-20-发生了什么？"><a href="#a-20-发生了什么？" class="headerlink" title="a &#x3D; 20 发生了什么？"></a>a &#x3D; 20 发生了什么？</h3><ol>
+<li>创建对象 <code>20</code></li>
+<li>标签 <code>a</code> 从 10 撕下来，改贴到 20</li>
+</ol>
+<p><strong>变量本身没变，只是指向的目标换了。</strong></p>
+<h3 id="多个标签指向同一个东西"><a href="#多个标签指向同一个东西" class="headerlink" title="多个标签指向同一个东西"></a>多个标签指向同一个东西</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line">b = a          <span class="comment"># 不是复制，是贴了第二张标签</span></span><br><span class="line">b.append(<span class="number">4</span>)</span><br><span class="line"><span class="built_in">print</span>(a)       <span class="comment"># [1, 2, 3, 4]  ← a 也变了！</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">a        b</span><br><span class="line"> \      /</span><br><span class="line">  ↓    ↓</span><br><span class="line">[同一个列表对象]</span><br></pre></td></tr></table></figure>
+
+<h3 id="类比"><a href="#类比" class="headerlink" title="类比"></a>类比</h3><blockquote>
+<p>变量不是盒子，是标签。<code>=</code> 不是”把值放进盒子”，而是”把标签贴到数据上”。</p>
+</blockquote>
+<hr>
+<h2 id="二、栈区-vs-堆区"><a href="#二、栈区-vs-堆区" class="headerlink" title="二、栈区 vs 堆区"></a>二、栈区 vs 堆区</h2><table>
+<thead>
+<tr>
+<th></th>
+<th>栈 Stack</th>
+<th>堆 Heap</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>大小</td>
+<td>小</td>
+<td>大</td>
+</tr>
+<tr>
+<td>速度</td>
+<td>快</td>
+<td>慢</td>
+</tr>
+<tr>
+<td>管理</td>
+<td>自动（函数结束就收）</td>
+<td>需 GC</td>
+</tr>
+<tr>
+<td>存什么</td>
+<td>局部变量名、函数调用</td>
+<td>真正的对象</td>
+</tr>
+<tr>
+<td>生命周期</td>
+<td>短</td>
+<td>长</td>
+</tr>
+</tbody></table>
+<p><strong>Python 里：变量名在栈，变量值在堆，用”指向”连接。</strong></p>
+<h3 id="类比-1"><a href="#类比-1" class="headerlink" title="类比"></a>类比</h3><blockquote>
+<p>栈 &#x3D; 手边工作台（小、快、用完就收）<br>堆 &#x3D; 后面大仓库（大、慢、长期存）</p>
+</blockquote>
+<h3 id="关键理解"><a href="#关键理解" class="headerlink" title="关键理解"></a>关键理解</h3><p><strong>栈上的标签消失 ≠ 堆上的对象消失。只要还有人指向，堆对象就活着。</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">make_list</span>():</span><br><span class="line">    x = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]      <span class="comment"># x 是栈上的标签，列表对象在堆上</span></span><br><span class="line">    <span class="keyword">return</span> x</span><br><span class="line"></span><br><span class="line">result = make_list()    <span class="comment"># result 接住了堆上那个列表</span></span><br><span class="line"><span class="comment"># 函数结束后 x 被撕掉，但堆上的列表还在</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="三、可变-vs-不可变（分水岭）"><a href="#三、可变-vs-不可变（分水岭）" class="headerlink" title="三、可变 vs 不可变（分水岭）"></a>三、可变 vs 不可变（分水岭）</h2><h3 id="不可变：数字、字符串、元组"><a href="#不可变：数字、字符串、元组" class="headerlink" title="不可变：数字、字符串、元组"></a>不可变：数字、字符串、元组</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">a = <span class="string">&quot;hi&quot;</span></span><br><span class="line">a = a + <span class="string">&quot;!&quot;</span>    <span class="comment"># 新建对象，标签换目标</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="可变：列表、字典、集合"><a href="#可变：列表、字典、集合" class="headerlink" title="可变：列表、字典、集合"></a>可变：列表、字典、集合</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>]</span><br><span class="line">a.append(<span class="number">4</span>)    <span class="comment"># 原地改，门牌号不变</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">id</span>(a))    <span class="comment"># 假设 2001</span></span><br><span class="line">a.append(<span class="number">4</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">id</span>(a))    <span class="comment"># 还是 2001！没变</span></span><br><span class="line"></span><br><span class="line">b = <span class="string">&quot;hi&quot;</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">id</span>(b))    <span class="comment"># 假设 3001</span></span><br><span class="line">b = b + <span class="string">&quot;!&quot;</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">id</span>(b))    <span class="comment"># 变了！新对象</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="口诀"><a href="#口诀" class="headerlink" title="口诀"></a>口诀</h3><blockquote>
+<p>不可变一改就换新；可变能原地改。</p>
+</blockquote>
+<hr>
+<h2 id="四、函数传参（pass-by-object-reference）"><a href="#四、函数传参（pass-by-object-reference）" class="headerlink" title="四、函数传参（pass by object reference）"></a>四、函数传参（pass by object reference）</h2><p><strong>调用 f(a) → 把 a 的标签复制一份，贴到形参上。</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">a  ──┐</span><br><span class="line">     ├──→ [同一个对象]</span><br><span class="line">x  ──┘</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>函数里做了什么</th>
+<th>外面变不变</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>x = 新值</code>（改标签）</td>
+<td>不变</td>
+<td>只换指向</td>
+</tr>
+<tr>
+<td><code>x.append()</code> &#x2F; <code>x[0]=</code>（改对象）</td>
+<td>变</td>
+<td>改的是同一对象</td>
+</tr>
+<tr>
+<td>传不可变对象</td>
+<td>不变</td>
+<td>没法原地改</td>
+</tr>
+</tbody></table>
+<h3 id="口诀-1"><a href="#口诀-1" class="headerlink" title="口诀"></a>口诀</h3><blockquote>
+<p>改标签，外面不变；改对象，外面就变。</p>
+</blockquote>
+<h3 id="三种情况"><a href="#三种情况" class="headerlink" title="三种情况"></a>三种情况</h3><p><strong>情况 1：传不可变对象</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">f</span>(<span class="params">x</span>):</span><br><span class="line">    x = <span class="number">100</span>        <span class="comment"># 只是把 x 这张标签撕下来，改贴到 100 上</span></span><br><span class="line"></span><br><span class="line">a = <span class="number">10</span></span><br><span class="line">f(a)</span><br><span class="line"><span class="built_in">print</span>(a)           <span class="comment"># 10，没变</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>情况 2：传可变对象，但重新赋值</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">f</span>(<span class="params">x</span>):</span><br><span class="line">    x = [<span class="number">9</span>, <span class="number">9</span>, <span class="number">9</span>]    <span class="comment"># x 改贴到新列表上了</span></span><br><span class="line"></span><br><span class="line">a = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line">f(a)</span><br><span class="line"><span class="built_in">print</span>(a)             <span class="comment"># [1, 2, 3]，没变！</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>情况 3：传可变对象，且原地修改</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">f</span>(<span class="params">x</span>):</span><br><span class="line">    x.append(<span class="number">4</span>)      <span class="comment"># 没换标签，直接在原对象上动手</span></span><br><span class="line"></span><br><span class="line">a = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line">f(a)</span><br><span class="line"><span class="built_in">print</span>(a)             <span class="comment"># [1, 2, 3, 4]  ← 变了！</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="经典陷阱"><a href="#经典陷阱" class="headerlink" title="经典陷阱"></a>经典陷阱</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">f</span>(<span class="params">x</span>):</span><br><span class="line">    x += [<span class="number">4</span>]      <span class="comment"># 列表 += 是原地扩展（相当于 extend）！</span></span><br><span class="line"></span><br><span class="line">a = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line">f(a)</span><br><span class="line"><span class="built_in">print</span>(a)          <span class="comment"># [1, 2, 3, 4] 变了！</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>对比：</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">f</span>(<span class="params">x</span>):</span><br><span class="line">    x = x + [<span class="number">4</span>]   <span class="comment"># + 是新建列表，x 改贴新对象</span></span><br><span class="line"></span><br><span class="line">a = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line">f(a)</span><br><span class="line"><span class="built_in">print</span>(a)          <span class="comment"># [1, 2, 3] 没变</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="默认参数大坑"><a href="#默认参数大坑" class="headerlink" title="默认参数大坑"></a>默认参数大坑</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">f</span>(<span class="params">x, lst=[]</span>):   <span class="comment"># ❌ 危险！[] 只创建一次</span></span><br><span class="line">    lst.append(x)</span><br><span class="line">    <span class="keyword">return</span> lst</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(f(<span class="number">1</span>))  <span class="comment"># [1]</span></span><br><span class="line"><span class="built_in">print</span>(f(<span class="number">2</span>))  <span class="comment"># [1,2]  ← 记住了上次的！</span></span><br><span class="line"><span class="built_in">print</span>(f(<span class="number">3</span>))  <span class="comment"># [1,2,3]</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>原因</strong>：默认参数 <code>[]</code> 只在函数定义时创建一次，之后所有调用共用同一个列表。</p>
+<p>正确写法：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">f</span>(<span class="params">x, lst=<span class="literal">None</span></span>):</span><br><span class="line">    <span class="keyword">if</span> lst <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">        lst = []</span><br><span class="line">    lst.append(x)</span><br><span class="line">    <span class="keyword">return</span> lst</span><br></pre></td></tr></table></figure>
+
+<h3 id="对比其他语言"><a href="#对比其他语言" class="headerlink" title="对比其他语言"></a>对比其他语言</h3><table>
+<thead>
+<tr>
+<th>语言</th>
+<th>传参方式</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>C</td>
+<td>传值</td>
+<td>改啥外面都不变（除非传指针）</td>
+</tr>
+<tr>
+<td>C++</td>
+<td>传值 &#x2F; 传引用</td>
+<td>可以选</td>
+</tr>
+<tr>
+<td>Java</td>
+<td>传值（对象传引用的副本）</td>
+<td>和 Python 很像</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>传对象引用</td>
+<td>官方叫 pass by object reference</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="五、深浅拷贝"><a href="#五、深浅拷贝" class="headerlink" title="五、深浅拷贝"></a>五、深浅拷贝</h2><table>
+<thead>
+<tr>
+<th></th>
+<th>外层</th>
+<th>内层</th>
+<th>改内层影响对方？</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>赋值 <code>b=a</code></td>
+<td>共用</td>
+<td>共用</td>
+<td>✅ 影响</td>
+</tr>
+<tr>
+<td>浅拷贝</td>
+<td>独立</td>
+<td>共用</td>
+<td>✅ 影响</td>
+</tr>
+<tr>
+<td>深拷贝</td>
+<td>独立</td>
+<td>独立</td>
+<td>❌ 不影响</td>
+</tr>
+</tbody></table>
+<h3 id="口诀-2"><a href="#口诀-2" class="headerlink" title="口诀"></a>口诀</h3><blockquote>
+<p>赋值是贴标签，浅拷贝只剥一层皮，深拷贝连骨头都换新。</p>
+</blockquote>
+<h3 id="浅拷贝的写法（全都只复制一层）"><a href="#浅拷贝的写法（全都只复制一层）" class="headerlink" title="浅拷贝的写法（全都只复制一层）"></a>浅拷贝的写法（全都只复制一层）</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">b = a[:]          <span class="comment"># 列表切片</span></span><br><span class="line">b = <span class="built_in">list</span>(a)       <span class="comment"># list() 构造</span></span><br><span class="line">b = a.copy()      <span class="comment"># 列表方法</span></span><br><span class="line">b = <span class="built_in">dict</span>(d)       <span class="comment"># 字典构造</span></span><br><span class="line">b = d.copy()      <span class="comment"># 字典方法</span></span><br><span class="line">b = <span class="built_in">set</span>(s)        <span class="comment"># 集合构造</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="这些写法一览"><a href="#这些写法一览" class="headerlink" title="这些写法一览"></a>这些写法一览</h3><table>
+<thead>
+<tr>
+<th>写法</th>
+<th>用于什么</th>
+<th>结果</th>
+<th>本质</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>a[:]</code></td>
+<td>列表</td>
+<td>新列表</td>
+<td>切片复制</td>
+</tr>
+<tr>
+<td><code>list(a)</code></td>
+<td>任何可迭代对象</td>
+<td>新列表</td>
+<td>构造新列表</td>
+</tr>
+<tr>
+<td><code>a.copy()</code></td>
+<td>列表</td>
+<td>新列表</td>
+<td>列表自带复制</td>
+</tr>
+<tr>
+<td><code>dict(d)</code></td>
+<td>可转字典的东西</td>
+<td>新字典</td>
+<td>构造新字典</td>
+</tr>
+<tr>
+<td><code>d.copy()</code></td>
+<td>字典</td>
+<td>新字典</td>
+<td>字典自带复制</td>
+</tr>
+<tr>
+<td><code>set(s)</code></td>
+<td>任何可迭代对象</td>
+<td>新集合</td>
+<td>构造新集合</td>
+</tr>
+</tbody></table>
+<p><strong>命名规律：<code>类型名(对象)</code> &#x3D; 把这个对象转成该类型的新对象。</strong></p>
+<h3 id="浅拷贝的坑"><a href="#浅拷贝的坑" class="headerlink" title="浅拷贝的坑"></a>浅拷贝的坑</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="number">1</span>, <span class="number">2</span>, [<span class="number">3</span>, <span class="number">4</span>]]</span><br><span class="line">b = a[:]           <span class="comment"># 浅拷贝</span></span><br><span class="line">b[<span class="number">2</span>].append(<span class="number">5</span>)</span><br><span class="line"><span class="built_in">print</span>(a)           <span class="comment"># [1, 2, [3, 4, 5]]  ← a 变了！</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="深拷贝"><a href="#深拷贝" class="headerlink" title="深拷贝"></a>深拷贝</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> copy</span><br><span class="line">b = copy.deepcopy(a)   <span class="comment"># 从里到外全复制</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="验证-1"><a href="#验证-1" class="headerlink" title="验证"></a>验证</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="number">1</span>, <span class="number">2</span>, [<span class="number">3</span>, <span class="number">4</span>]]</span><br><span class="line">b = copy.deepcopy(a)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(a <span class="keyword">is</span> b)          <span class="comment"># False</span></span><br><span class="line"><span class="built_in">print</span>(a[<span class="number">2</span>] <span class="keyword">is</span> b[<span class="number">2</span>])    <span class="comment"># False ← 内层也是不同的了！</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="什么时候用哪个"><a href="#什么时候用哪个" class="headerlink" title="什么时候用哪个"></a>什么时候用哪个</h3><table>
+<thead>
+<tr>
+<th>场景</th>
+<th>推荐</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>传副本给函数，不嵌套</td>
+<td>浅拷贝 <code>a[:]</code> &#x2F; <code>a.copy()</code></td>
+</tr>
+<tr>
+<td>嵌套结构，想彻底独立</td>
+<td><code>deepcopy</code></td>
+</tr>
+<tr>
+<td>多个名字指同一个东西</td>
+<td>直接 <code>b = a</code></td>
+</tr>
+<tr>
+<td>数据很大，deepcopy 太慢</td>
+<td>想想能否避免拷贝</td>
+</tr>
+</tbody></table>
+<h3 id="不可变对象的拷贝"><a href="#不可变对象的拷贝" class="headerlink" title="不可变对象的拷贝"></a>不可变对象的拷贝</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">a = (<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>)        <span class="comment"># 元组，不可变</span></span><br><span class="line">b = copy.copy(a)</span><br><span class="line"><span class="built_in">print</span>(a <span class="keyword">is</span> b)        <span class="comment"># True！没必要复制</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="六、循环引用"><a href="#六、循环引用" class="headerlink" title="六、循环引用"></a>六、循环引用</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">a = []</span><br><span class="line">a.append(a)      <span class="comment"># a 里面装了自己</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="结构"><a href="#结构" class="headerlink" title="结构"></a>结构</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">a ──→ ┌──────────────┐</span><br><span class="line">      │ 0: ──────────┼──┐</span><br><span class="line">      └──────────────┘  │</span><br><span class="line">            ↑           │</span><br><span class="line">            └───────────┘</span><br><span class="line">      自己指向自己</span><br></pre></td></tr></table></figure>
+
+<h3 id="为什么是麻烦？"><a href="#为什么是麻烦？" class="headerlink" title="为什么是麻烦？"></a>为什么是麻烦？</h3><ul>
+<li>手写循环复制会无限递归 → 卡死</li>
+<li>引用计数永远 ≥ 1 → 回收不掉 → 内存泄漏</li>
+</ul>
+<h3 id="deepcopy-怎么解决？"><a href="#deepcopy-怎么解决？" class="headerlink" title="deepcopy 怎么解决？"></a>deepcopy 怎么解决？</h3><p><strong>内部有”记录表”，记住哪些复制过了，遇到重复直接复用，不会死循环。</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> copy</span><br><span class="line">a = []</span><br><span class="line">a.append(a)</span><br><span class="line">b = copy.deepcopy(a)   <span class="comment"># 也能正常复制，不会卡死</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="类比-2"><a href="#类比-2" class="headerlink" title="类比"></a>类比</h3><blockquote>
+<p>两个人互相推诿：”你找 B””你找 A”……永远结束不了。<br>deepcopy 拿个本子记：”这个我处理过了”，直接跳过。</p>
+</blockquote>
+<h3 id="现实中的循环引用"><a href="#现实中的循环引用" class="headerlink" title="现实中的循环引用"></a>现实中的循环引用</h3><ul>
+<li>双向链表：A 指向 B，B 也指向 A</li>
+<li>图结构：节点互相连接</li>
+<li>对象的父子关系：父有子，子存父</li>
+</ul>
+<hr>
+<h2 id="七、垃圾回收三机制"><a href="#七、垃圾回收三机制" class="headerlink" title="七、垃圾回收三机制"></a>七、垃圾回收三机制</h2><table>
+<thead>
+<tr>
+<th>机制</th>
+<th>管什么</th>
+<th>时机</th>
+<th>能清循环吗</th>
+<th>速度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>引用计数</td>
+<td>普通对象</td>
+<td>实时</td>
+<td>❌</td>
+<td>快</td>
+</tr>
+<tr>
+<td>标记清除</td>
+<td>循环引用</td>
+<td>定期</td>
+<td>✅</td>
+<td>慢</td>
+</tr>
+<tr>
+<td>分代回收</td>
+<td>优化标记清除</td>
+<td>按代数</td>
+<td>✅</td>
+<td>较快</td>
+</tr>
+</tbody></table>
+<h3 id="三者关系"><a href="#三者关系" class="headerlink" title="三者关系"></a>三者关系</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">引用计数（主力，实时）</span><br><span class="line">   ↓ 搞不定循环引用</span><br><span class="line">标记清除（专治循环）</span><br><span class="line">   ↓ 为了更快</span><br><span class="line">分代回收（分三代，新的多扫、老的多留）</span><br></pre></td></tr></table></figure>
+
+<h3 id="口诀-3"><a href="#口诀-3" class="headerlink" title="口诀"></a>口诀</h3><blockquote>
+<p>引用计数管日常，标记清除补漏洞，分代回收提效率。</p>
+</blockquote>
+<h3 id="引用计数"><a href="#引用计数" class="headerlink" title="引用计数"></a>引用计数</h3><ul>
+<li>有标签指向 → 计数 +1</li>
+<li>标签消失 → 计数 -1</li>
+<li>计数变成 0 → 立刻回收</li>
+<li><strong>死穴：循环引用</strong></li>
+</ul>
+<h3 id="标记清除"><a href="#标记清除" class="headerlink" title="标记清除"></a>标记清除</h3><p>思路分两步：</p>
+<ol>
+<li><strong>标记（Mark）</strong>：从”根”出发，把所有能到达的对象标记为”活着”</li>
+<li><strong>清除（Sweep）</strong>：没被标记的，就是垃圾，清掉</li>
+</ol>
+<ul>
+<li>✅ 能清循环引用</li>
+<li>❌ 不是实时，扫描时会暂停程序</li>
+</ul>
+<h3 id="分代回收"><a href="#分代回收" class="headerlink" title="分代回收"></a>分代回收</h3><p>对象分三代：</p>
+<ul>
+<li>第 0 代（新生代）：扫得最勤</li>
+<li>第 1 代（中年代）：扫得较少</li>
+<li>第 2 代（老年代）：扫得最少</li>
+</ul>
+<p>默认阈值 <code>(700, 10, 10)</code>：</p>
+<ul>
+<li>0 代数量 - 1 代数量 &gt; 700 → 触发 0 代回收</li>
+<li>0 代回收 10 次 → 触发 1 代</li>
+<li>1 代回收 10 次 → 触发 2 代</li>
+</ul>
+<h3 id="手动干预"><a href="#手动干预" class="headerlink" title="手动干预"></a>手动干预</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> gc</span><br><span class="line">gc.collect()          <span class="comment"># 手动触发</span></span><br><span class="line">gc.disable()          <span class="comment"># 关自动 GC（实时系统）</span></span><br><span class="line">gc.enable()           <span class="comment"># 重新开启</span></span><br><span class="line">gc.get_count()        <span class="comment"># 看各代计数</span></span><br><span class="line">gc.get_threshold()    <span class="comment"># 看阈值</span></span><br><span class="line">gc.get_objects()      <span class="comment"># 看所有被跟踪的对象</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="循环引用导致内存泄漏"><a href="#循环引用导致内存泄漏" class="headerlink" title="循环引用导致内存泄漏"></a>循环引用导致内存泄漏</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Node</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="variable language_">self</span>.other = <span class="literal">None</span></span><br><span class="line"></span><br><span class="line">a = Node()</span><br><span class="line">b = Node()</span><br><span class="line">a.other = b      <span class="comment"># a 指向 b</span></span><br><span class="line">b.other = a      <span class="comment"># b 指向 a</span></span><br><span class="line">a = <span class="literal">None</span></span><br><span class="line">b = <span class="literal">None</span>         <span class="comment"># 外面的标签都撕了，但互相拽着，回收不掉</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>Python 靠分代 GC 定期清理这种”互相抱团”的垃圾。</strong></p>
+<h3 id="避免循环引用"><a href="#避免循环引用" class="headerlink" title="避免循环引用"></a>避免循环引用</h3><ol>
+<li>手动断开：<code>a.other = None</code></li>
+<li>弱引用：<code>weakref.ref(obj)</code></li>
+<li>结构上避免互相引用</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> weakref</span><br><span class="line">a.other = weakref.ref(b)    <span class="comment"># 弱引用，不增加 b 的计数</span></span><br><span class="line">b.other = weakref.ref(a)</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="八、完整流程"><a href="#八、完整流程" class="headerlink" title="八、完整流程"></a>八、完整流程</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">对象创建</span><br><span class="line">  → 引用计数实时管</span><br><span class="line">    → 循环引用漏网</span><br><span class="line">      → 分代回收定期触发</span><br><span class="line">        → 标记清除动手清</span><br><span class="line">          → 内存归还</span><br></pre></td></tr></table></figure>
+
+<h3 id="完整流程图"><a href="#完整流程图" class="headerlink" title="完整流程图"></a>完整流程图</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line">╔══════════════════════════════════════════════════════════════════════╗</span><br><span class="line">║              Python 垃圾回收机制 · 完整流程图                           ║</span><br><span class="line">╚══════════════════════════════════════════════════════════════════════╝</span><br><span class="line"></span><br><span class="line">┌──────────────────────────────────────────────────────────────────────┐</span><br><span class="line">│  第 0 步：对象诞生                                                     │</span><br><span class="line">│     a = [1, 2, 3]                                                     │</span><br><span class="line">│     · 对象创建在【堆】上                                                │</span><br><span class="line">│     · 引用计数 = 1（标签 a 指向它）                                     │</span><br><span class="line">└──────────────────────────────────────────────────────────────────────┘</span><br><span class="line">                              │</span><br><span class="line">                              ▼</span><br><span class="line">┌──────────────────────────────────────────────────────────────────────┐</span><br><span class="line">│  第 1 关：引用计数（实时监控，主力机制）                                 │</span><br><span class="line">│     有标签指向 → 计数 +1                                                │</span><br><span class="line">│     标签消失   → 计数 -1                                                │</span><br><span class="line">│        ┌─────────────────────┐                                        │</span><br><span class="line">│        │  计数 == 0 ？         │                                        │</span><br><span class="line">│        └──────────┬──────────┘                                        │</span><br><span class="line">│              是   │   否                                               │</span><br><span class="line">│         ┌────────┘   └────────┐                                       │</span><br><span class="line">│         ▼                     ▼                                       │</span><br><span class="line">│   【立即回收】            对象继续存活                                   │</span><br><span class="line">│   ✅ 完成               进入第 2 关检查                                 │</span><br><span class="line">└──────────────────────────────────────────────────────────────────────┘</span><br><span class="line">                              │</span><br><span class="line">                              ▼</span><br><span class="line">┌──────────────────────────────────────────────────────────────────────┐</span><br><span class="line">│  第 2 关：循环引用检测                                                 │</span><br><span class="line">│        a = []                                                         │</span><br><span class="line">│        a.append(a)      ← 自己指向自己，计数永远 ≥ 1                     │</span><br><span class="line">│        ┌─────────────────────┐                                        │</span><br><span class="line">│        │  存在循环引用？       │                                        │</span><br><span class="line">│        └──────────┬──────────┘                                        │</span><br><span class="line">│              是   │   否                                               │</span><br><span class="line">│         ┌────────┘   └────────┐                                       │</span><br><span class="line">│         ▼                     ▼                                       │</span><br><span class="line">│   引用计数搞不定          正常对象                                      │</span><br><span class="line">│   交给第 3 关             计数为 0 时已被回收                            │</span><br><span class="line">└──────────────────────────────────────────────────────────────────────┘</span><br><span class="line">                              │</span><br><span class="line">                              ▼</span><br><span class="line">┌──────────────────────────────────────────────────────────────────────┐</span><br><span class="line">│  第 3 关：分代回收触发                                                 │</span><br><span class="line">│      ┌──────────────┐   ┌──────────────┐   ┌──────────────┐          │</span><br><span class="line">│      │  第 0 代      │→ │  第 1 代      │→ │  第 2 代      │          │</span><br><span class="line">│      │  扫得最勤      │   │  扫得较少     │   │  扫得最少     │          │</span><br><span class="line">│      └──────────────┘   └──────────────┘   └──────────────┘          │</span><br><span class="line">└──────────────────────────────────────────────────────────────────────┘</span><br><span class="line">                              │</span><br><span class="line">                              ▼</span><br><span class="line">┌──────────────────────────────────────────────────────────────────────┐</span><br><span class="line">│  第 4 关：标记清除（真正动手清理）                                       │</span><br><span class="line">│     ① 标记阶段：从根出发，能到达的标记为&quot;活着&quot; ✅                        │</span><br><span class="line">│     ② 清除阶段：没被标记的 → 垃圾 → 回收 ❌                            │</span><br><span class="line">│     ⚠️ 扫描时会&quot;暂停程序&quot;（stop the world）                             │</span><br><span class="line">└──────────────────────────────────────────────────────────────────────┘</span><br><span class="line">                              │</span><br><span class="line">                              ▼</span><br><span class="line">┌──────────────────────────────────────────────────────────────────────┐</span><br><span class="line">│  第 5 关：回收完成                                                     │</span><br><span class="line">│     · 垃圾内存释放                                                      │</span><br><span class="line">│     · 活着的对象&quot;晋升&quot;到下一代                                          │</span><br><span class="line">│     ✅ 内存干净了                                                      │</span><br><span class="line">└──────────────────────────────────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="九、元组-字典判断表达式"><a href="#九、元组-字典判断表达式" class="headerlink" title="九、元组 &#x2F; 字典判断表达式"></a>九、元组 &#x2F; 字典判断表达式</h2><h3 id="元组判断"><a href="#元组判断" class="headerlink" title="元组判断"></a>元组判断</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> x <span class="keyword">in</span> (<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>):        <span class="comment"># 看 x 在不在这一组固定选项里</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;在里面&quot;</span>)</span><br><span class="line"></span><br><span class="line">day = <span class="string">&quot;周六&quot;</span></span><br><span class="line"><span class="keyword">if</span> day <span class="keyword">in</span> (<span class="string">&quot;周六&quot;</span>, <span class="string">&quot;周日&quot;</span>):</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;休息日&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<h3 id="字典判断"><a href="#字典判断" class="headerlink" title="字典判断"></a>字典判断</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">d = &#123;<span class="string">&quot;name&quot;</span>: <span class="string">&quot;Tom&quot;</span>, <span class="string">&quot;age&quot;</span>: <span class="number">18</span>&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> <span class="string">&quot;name&quot;</span> <span class="keyword">in</span> d:          <span class="comment"># 判断 key 存不存在</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;有 name 这个键&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> <span class="string">&quot;Tom&quot;</span> <span class="keyword">in</span> d.values():  <span class="comment"># 判断 value 存不存在</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;有 Tom 这个值&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p><strong>重点：字典的 <code>in</code> 默认只看 key，不看 value！</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&quot;name&quot;</span> <span class="keyword">in</span> d     <span class="comment"># True  （key）</span></span><br><span class="line"><span class="string">&quot;Tom&quot;</span> <span class="keyword">in</span> d      <span class="comment"># False （Tom 是 value，不是 key）</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="字典推导式"><a href="#字典推导式" class="headerlink" title="字典推导式"></a>字典推导式</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">squares = &#123;i: i * i <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">5</span>)&#125;</span><br><span class="line"><span class="comment"># &#123;0: 0, 1: 1, 2: 4, 3: 9, 4: 16&#125;</span></span><br><span class="line"></span><br><span class="line">d = &#123;<span class="string">&quot;a&quot;</span>: <span class="number">1</span>, <span class="string">&quot;b&quot;</span>: <span class="number">2</span>, <span class="string">&quot;c&quot;</span>: <span class="number">3</span>&#125;</span><br><span class="line">big = &#123;k: v <span class="keyword">for</span> k, v <span class="keyword">in</span> d.items() <span class="keyword">if</span> v &gt; <span class="number">1</span>&#125;</span><br><span class="line"><span class="comment"># &#123;&quot;b&quot;: 2, &quot;c&quot;: 3&#125;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="元组-vs-字典-对比"><a href="#元组-vs-字典-对比" class="headerlink" title="元组 vs 字典 对比"></a>元组 vs 字典 对比</h3><table>
+<thead>
+<tr>
+<th></th>
+<th>元组</th>
+<th>字典</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>判断写法</td>
+<td><code>x in (1,2,3)</code></td>
+<td><code>k in d</code>（只看 key）</td>
+</tr>
+<tr>
+<td>判断什么</td>
+<td>有没有相等的元素</td>
+<td>有没有这个 key</td>
+</tr>
+<tr>
+<td>适合场景</td>
+<td>少量固定选项</td>
+<td>有键值对应关系</td>
+</tr>
+</tbody></table>
+<h3 id="易混点：元组推导式"><a href="#易混点：元组推导式" class="headerlink" title="易混点：元组推导式"></a>易混点：元组推导式</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">t = (i <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">5</span>))   <span class="comment"># 这其实不是元组！是&quot;生成器&quot;</span></span><br><span class="line"><span class="built_in">print</span>(t)                     <span class="comment"># &lt;generator object ...&gt;</span></span><br><span class="line"></span><br><span class="line">t = <span class="built_in">tuple</span>(i <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">5</span>))   <span class="comment"># 想得到元组要这样</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>记住：Python 没有真正的”元组推导式”，括号包起来的是生成器。</strong></p>
+</div>
+  <nav class="article-end" aria-label="继续阅读"><a href="/topics/">浏览学习专题 <span aria-hidden="true">↗</span></a><a href="#main-content">回到顶部 ↑</a></nav>
+</article>
+
+</div>
+</main>
+
+<footer class="footer linx-footer">
+  <span>记录学习的过程，也记录慢慢想明白的事。</span>
+  <span><a href="https://github.com/dubingjie" target="_blank" rel="noopener noreferrer">GitHub</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://github.com/wu3227834/hexo-theme-aerlume">Aerlume</a></span>
+</footer>
+
+
+<script src="/js/linx.js" defer data-root="/" data-search="/search.json"></script>
+
+<script src="/js/clipboard.js" defer></script>
+<script src="/js/lightbox.js" defer></script>
+
+</body>
+</html>

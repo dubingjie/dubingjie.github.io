@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redis 核心机制与架构演进详解（从单机到分布式集群） · LinX的世界</title>
+  <meta name="description" content="整理 RDB、AOF 与混合持久化、主从复制、Sentinel 故障转移，以及 Redis Cluster 的哈希槽、Gossip 和 MOVED 重定向机制。">
+  <link rel="canonical" href="https://dubingjie.github.io/2026/10/09/redis-core-mechanisms-architecture/">
+  <meta property="og:title" content="Redis 核心机制与架构演进详解（从单机到分布式集群） · LinX的世界">
+  <meta property="og:description" content="整理 RDB、AOF 与混合持久化、主从复制、Sentinel 故障转移，以及 Redis Cluster 的哈希槽、Gossip 和 MOVED 重定向机制。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dubingjie.github.io/2026/10/09/redis-core-mechanisms-architecture/">
+  <meta property="og:site_name" content="LinX的世界">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  
+<link rel="stylesheet" href="/css/aerlume.css">
+
+  <style>@font-face{font-family:'Aerlume Local';src:url('/fonts/TsangerYuYangT_W03_W03.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}:root{--aerlume-local-font:'Aerlume Local'}</style>
+  
+<link rel="stylesheet" href="/css/linx.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="reading-page">
+<a class="skip-link" href="#main-content">跳到正文</a>
+
+  <main class="reading-shell" id="main-content">
+<div class="reading-tools">
+  <a class="reading-back" data-reading-back href="/"><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18"/></svg><span>返回</span></a>
+</div>
+<div class="article-reading-layout has-toc">
+  
+  <details class="reading-toc" id="reading-toc" open>
+    <summary><svg class="linx-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="toc-open-label">目录</span><span class="toc-hide-label">隐藏 ←</span><span class="toc-show-label">目录 →</span></summary>
+    <nav class="reading-toc-panel" aria-label="文章目录"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Redis-%E6%A0%B8%E5%BF%83%E6%9C%BA%E5%88%B6%E4%B8%8E%E6%9E%B6%E6%9E%84%E6%BC%94%E8%BF%9B%E8%AF%A6%E8%A7%A3%EF%BC%88%E4%BB%8E%E5%8D%95%E6%9C%BA%E5%88%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%9B%86%E7%BE%A4%EF%BC%89"><span class="toc-text">Redis 核心机制与架构演进详解（从单机到分布式集群）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81-%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6%EF%BC%9A%E8%A7%A3%E5%86%B3%E2%80%9C%E6%95%B0%E6%8D%AE%E4%B8%8D%E4%B8%A2%E2%80%9D%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-text">一、 持久化机制：解决“数据不丢”的问题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-RDB%EF%BC%88Redis-DataBase%EF%BC%89%E2%80%94%E2%80%94-%E5%85%A8%E9%87%8F%E5%BF%AB%E7%85%A7"><span class="toc-text">1. RDB（Redis DataBase）—— 全量快照</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-AOF%EF%BC%88Append-Only-File%EF%BC%89%E2%80%94%E2%80%94-%E5%A2%9E%E9%87%8F%E6%97%A5%E5%BF%97"><span class="toc-text">2. AOF（Append Only File）—— 增量日志</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E6%B7%B7%E5%90%88%E6%8C%81%E4%B9%85%E5%8C%96%EF%BC%88%E6%8E%A8%E8%8D%90%EF%BC%89"><span class="toc-text">3. 混合持久化（推荐）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81-%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6%EF%BC%9A%E8%A7%A3%E5%86%B3%E2%80%9C%E8%AF%BB%E6%80%A7%E8%83%BD%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%A4%87%E4%BB%BD%E2%80%9D%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-text">二、 主从复制：解决“读性能与数据备份”的问题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%85%A8%E9%87%8F%E5%90%8C%E6%AD%A5%EF%BC%88%E9%A6%96%E6%AC%A1%E8%BF%9E%E6%8E%A5%EF%BC%89"><span class="toc-text">1. 全量同步（首次连接）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%A2%9E%E9%87%8F%E5%90%8C%E6%AD%A5%EF%BC%88%E6%96%AD%E7%BA%BF%E9%87%8D%E8%BF%9E%EF%BC%89"><span class="toc-text">2. 增量同步（断线重连）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81-%E5%93%A8%E5%85%B5%E6%A8%A1%E5%BC%8F%EF%BC%88Sentinel%EF%BC%89%EF%BC%9A%E8%A7%A3%E5%86%B3%E2%80%9C%E8%87%AA%E5%8A%A8%E5%AE%B9%E7%81%BE%E2%80%9D%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-text">三、 哨兵模式（Sentinel）：解决“自动容灾”的问题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%93%A8%E5%85%B5%E9%9B%86%E7%BE%A4"><span class="toc-text">1. 哨兵集群</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%88%A4%E5%AE%9A%E4%B8%8B%E7%BA%BF"><span class="toc-text">2. 判定下线</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E9%80%89%E4%B8%BE%E6%96%B0%E4%B8%BB%E8%8A%82%E7%82%B9%EF%BC%88%E4%B8%89%E5%A4%A7%E6%A0%87%E5%87%86%EF%BC%89"><span class="toc-text">3. 选举新主节点（三大标准）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E6%95%85%E9%9A%9C%E8%BD%AC%E7%A7%BB"><span class="toc-text">4. 故障转移</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81-Redis-Cluster-%E9%9B%86%E7%BE%A4%EF%BC%9A%E8%A7%A3%E5%86%B3%E2%80%9C%E6%B5%B7%E9%87%8F%E6%95%B0%E6%8D%AE%E4%B8%8E%E6%B0%B4%E5%B9%B3%E6%89%A9%E5%B1%95%E2%80%9D%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-text">四、 Redis Cluster 集群：解决“海量数据与水平扩展”的问题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%93%88%E5%B8%8C%E6%A7%BD%EF%BC%88Hash-Slot%EF%BC%89"><span class="toc-text">1. 哈希槽（Hash Slot）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-text">2. 底层数据结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E9%80%9A%E4%BF%A1%E6%9C%BA%E5%88%B6%EF%BC%9AGossip-%E5%8D%8F%E8%AE%AE"><span class="toc-text">3. 通信机制：Gossip 协议</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%AE%BF%E9%97%AE%EF%BC%9AMOVED-%E9%87%8D%E5%AE%9A%E5%90%91"><span class="toc-text">4. 客户端访问：MOVED 重定向</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-%E9%AB%98%E5%8F%AF%E7%94%A8"><span class="toc-text">5. 高可用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81-%E6%9E%B6%E6%9E%84%E6%BC%94%E8%BF%9B%E6%80%BB%E7%BB%93"><span class="toc-text">五、 架构演进总结</span></a></li></ol></li></ol></nav>
+  </details>
+  
+<article class="post-container">
+  <header class="article-header">
+    <a class="article-category" href="/topics/#database">数据库与容器</a>
+    <h1 class="post-title">Redis 核心机制与架构演进详解（从单机到分布式集群）</h1>
+    <div class="post-meta"><time datetime="2026-10-09T00:00:00.000Z">2026-10-09</time><span aria-hidden="true"> / </span><a href="/tags/Redis/">Redis</a><span aria-hidden="true"> · </span><a href="/tags/%E6%8C%81%E4%B9%85%E5%8C%96/">持久化</a><span aria-hidden="true"> · </span><a href="/tags/RDB/">RDB</a><span aria-hidden="true"> · </span><a href="/tags/AOF/">AOF</a><span aria-hidden="true"> · </span><a href="/tags/%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/">主从复制</a><span aria-hidden="true"> · </span><a href="/tags/Sentinel/">Sentinel</a><span aria-hidden="true"> · </span><a href="/tags/Redis-Cluster/">Redis Cluster</a><span aria-hidden="true"> · </span><a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></div>
+    <p class="article-description">整理 RDB、AOF 与混合持久化、主从复制、Sentinel 故障转移，以及 Redis Cluster 的哈希槽、Gossip 和 MOVED 重定向机制。</p>
+  </header>
+  <div class="post-content"><h1 id="Redis-核心机制与架构演进详解（从单机到分布式集群）"><a href="#Redis-核心机制与架构演进详解（从单机到分布式集群）" class="headerlink" title="Redis 核心机制与架构演进详解（从单机到分布式集群）"></a>Redis 核心机制与架构演进详解（从单机到分布式集群）</h1><h2 id="一、-持久化机制：解决“数据不丢”的问题"><a href="#一、-持久化机制：解决“数据不丢”的问题" class="headerlink" title="一、 持久化机制：解决“数据不丢”的问题"></a>一、 持久化机制：解决“数据不丢”的问题</h2><p>Redis 数据存于内存，宕机即丢失。为了解决这个问题，Redis 提供了两种持久化方式：<strong>RDB（快照）</strong> 和 <strong>AOF（日志）</strong>。</p>
+<h3 id="1-RDB（Redis-DataBase）——-全量快照"><a href="#1-RDB（Redis-DataBase）——-全量快照" class="headerlink" title="1. RDB（Redis DataBase）—— 全量快照"></a>1. RDB（Redis DataBase）—— 全量快照</h3><p><strong>核心原理</strong>：<br>将某一时刻的内存数据，以二进制形式全量写入硬盘（默认文件 <code>dump.rdb</code>）。</p>
+<p><strong>通俗解释</strong>：<br>给整个仓库拍一张全景照片。恢复时直接铺开照片，速度极快。但拍照需要遍历整个仓库，耗时较长。</p>
+<p><strong>核心机制：写时复制（Copy-On-Write, COW）</strong></p>
+<ul>
+<li><strong>痛点</strong>：如果主进程自己去写硬盘，会阻塞客户端请求（浪费接待客人的时间）。</li>
+<li><strong>解决方案</strong>：主进程 <code>fork</code> 出一个子进程去写硬盘。主进程继续接待新请求。</li>
+<li><strong>COW 详细原理</strong>：<ul>
+<li>子进程刚出生时，与主进程共享同一份内存数据。</li>
+<li>如果主进程要修改数据，<strong>不修改原内存</strong>，而是<strong>复制</strong>出该数据所在的内存页，在副本上修改。</li>
+<li>子进程依然读取旧内存页，将其写入硬盘。</li>
+<li><strong>效果</strong>：子进程看到的是“出生那一刻”的完整快照；主进程不受影响，继续处理新请求。</li>
+</ul>
+</li>
+<li><strong>内存膨胀风险</strong>：如果子进程写盘期间，主进程修改了所有数据，内存会短暂膨胀为原来的 2 倍。因此建议预留一半内存。</li>
+</ul>
+<p><strong>触发方式</strong>：</p>
+<ul>
+<li><strong>手动触发</strong>：<code>SAVE</code>（阻塞主进程）、<code>BGSAVE</code>（fork 子进程）。</li>
+<li><strong>自动触发</strong>：配置文件中的 <code>save &lt;秒&gt; &lt;修改次数&gt;</code>。例如 <code>save 900 1</code> 表示 900 秒内至少 1 个键被修改则触发。<ul>
+<li>三个规则是“或”关系，谁先满足谁触发。</li>
+<li>触发后计数器清零，重新计时。</li>
+</ul>
+</li>
+</ul>
+<p><strong>优缺点</strong>：</p>
+<ul>
+<li><strong>优点</strong>：文件小，恢复速度快。</li>
+<li><strong>缺点</strong>：全量备份耗时长，不能频繁执行，宕机可能丢失几分钟数据。</li>
+</ul>
+<hr>
+<h3 id="2-AOF（Append-Only-File）——-增量日志"><a href="#2-AOF（Append-Only-File）——-增量日志" class="headerlink" title="2. AOF（Append Only File）—— 增量日志"></a>2. AOF（Append Only File）—— 增量日志</h3><p><strong>核心原理</strong>：<br>记录每一次<strong>写命令</strong>（如 <code>SET</code>, <code>DEL</code>, <code>RPUSH</code>），以追加的方式写入文件。读命令（如 <code>GET</code>）不记录。</p>
+<p><strong>通俗解释</strong>：<br>记流水账。恢复时需要把流水账里的命令重新跑一遍。</p>
+<p><strong>核心机制 1：aof_buf 缓冲区</strong></p>
+<ul>
+<li><strong>痛点</strong>：每来一个命令就写一次硬盘，磁盘 I&#x2F;O 会拖垮 Redis。</li>
+<li><strong>解决方案</strong>：命令先写入内存中的 <code>aof_buf</code>，然后根据策略批量刷入硬盘。</li>
+<li><strong>刷盘策略（appendfsync）</strong>：<ul>
+<li><code>always</code>：命令一进缓冲区立刻刷盘。最安全，最慢。</li>
+<li><code>everysec</code>：每秒刷盘一次。默认配置，兼顾性能与安全（最多丢 1 秒数据）。</li>
+<li><code>no</code>：由操作系统决定何时刷盘。最快，最不安全。</li>
+</ul>
+</li>
+</ul>
+<p><strong>核心机制 2：AOF 重写（Rewrite）</strong></p>
+<ul>
+<li><strong>痛点</strong>：流水账越记越长，文件巨大，恢复极慢。<ul>
+<li>例如：<code>SET count 1</code>, <code>SET count 2</code> … <code>SET count 10000</code>。</li>
+</ul>
+</li>
+<li><strong>解决方案</strong>：直接读取<strong>当前内存的最终数据</strong>，用最精简的命令重写一个新的 AOF 文件。<ul>
+<li>例如：直接写 <code>SET count 10000</code>。</li>
+</ul>
+</li>
+<li><strong>重写期间的数据一致性</strong>：<ul>
+<li>主进程的新写命令会同时写入 <code>aof_buf</code> 和 <code>AOF重写缓冲区</code>。</li>
+<li>重写完成后，将 <code>AOF重写缓冲区</code> 的内容追加到新 AOF 文件，保证数据不丢。</li>
+</ul>
+</li>
+</ul>
+<p><strong>优缺点</strong>：</p>
+<ul>
+<li><strong>优点</strong>：丢数据少（可做到每秒记录），适合高频写入。</li>
+<li><strong>缺点</strong>：文件较大，恢复速度慢（需逐条执行命令）。</li>
+</ul>
+<hr>
+<h3 id="3-混合持久化（推荐）"><a href="#3-混合持久化（推荐）" class="headerlink" title="3. 混合持久化（推荐）"></a>3. 混合持久化（推荐）</h3><p>结合两者优点：先以 RDB 格式写入全量数据，再以 AOF 格式追加增量命令。兼顾恢复速度与数据安全性。</p>
+<hr>
+<h2 id="二、-主从复制：解决“读性能与数据备份”的问题"><a href="#二、-主从复制：解决“读性能与数据备份”的问题" class="headerlink" title="二、 主从复制：解决“读性能与数据备份”的问题"></a>二、 主从复制：解决“读性能与数据备份”的问题</h2><p><strong>核心思想</strong>：读写分离。主节点（Master）负责写，从节点（Slave）负责读。</p>
+<h3 id="1-全量同步（首次连接）"><a href="#1-全量同步（首次连接）" class="headerlink" title="1. 全量同步（首次连接）"></a>1. 全量同步（首次连接）</h3><ul>
+<li>从节点连接主节点，主节点生成 RDB 发送给从节点。</li>
+<li><strong>关键细节</strong>：发送 RDB 期间，主节点产生的新写命令，会暂存到 <code>replication buffer</code>（复制缓冲区）。RDB 发送完毕后，再把这部分命令补发给从节点，保证数据一致。</li>
+<li><strong>通俗解释</strong>：新来的转学生抄笔记。老师一边发旧笔记（RDB），一边把新讲的知识点记在小本本（buffer）上，等旧笔记发完，再把小本本补发给转学生。</li>
+</ul>
+<h3 id="2-增量同步（断线重连）"><a href="#2-增量同步（断线重连）" class="headerlink" title="2. 增量同步（断线重连）"></a>2. 增量同步（断线重连）</h3><ul>
+<li><strong>痛点</strong>：从节点掉线 10 秒，重连后不需要重新接收全量 RDB。</li>
+<li><strong>解决方案</strong>：引入 <strong><code>offset</code>（复制偏移量）</strong>。<ul>
+<li>主从节点各自维护一个 offset（类似看书页码）。</li>
+<li>从节点重连后，上报自己的 offset。</li>
+<li>主节点对比自己的 offset，只把缺失的那部分命令补发给从节点。</li>
+</ul>
+</li>
+<li><strong>复制积压缓冲区（repl_backlog_buffer）</strong>：主节点维护的一个固定大小环形缓冲区。如果从节点缺失的数据超过该缓冲区大小，则只能触发全量同步。</li>
+</ul>
+<hr>
+<h2 id="三、-哨兵模式（Sentinel）：解决“自动容灾”的问题"><a href="#三、-哨兵模式（Sentinel）：解决“自动容灾”的问题" class="headerlink" title="三、 哨兵模式（Sentinel）：解决“自动容灾”的问题"></a>三、 哨兵模式（Sentinel）：解决“自动容灾”的问题</h2><p><strong>痛点</strong>：主从模式下，主节点宕机需要人工手动切换，不够智能。<br><strong>解决方案</strong>：引入哨兵集群，实现自动故障转移。</p>
+<h3 id="1-哨兵集群"><a href="#1-哨兵集群" class="headerlink" title="1. 哨兵集群"></a>1. 哨兵集群</h3><ul>
+<li>哨兵不存数据，只负责监控。</li>
+<li>必须部署多个哨兵（奇数个），防止单个哨兵误判或挂掉。</li>
+</ul>
+<h3 id="2-判定下线"><a href="#2-判定下线" class="headerlink" title="2. 判定下线"></a>2. 判定下线</h3><ul>
+<li><strong>主观下线（SDOWN）</strong>：单个哨兵发现主节点无响应。</li>
+<li><strong>客观下线（ODOWN）</strong>：多个哨兵（超过半数）投票确认主节点真的挂了。</li>
+</ul>
+<h3 id="3-选举新主节点（三大标准）"><a href="#3-选举新主节点（三大标准）" class="headerlink" title="3. 选举新主节点（三大标准）"></a>3. 选举新主节点（三大标准）</h3><ol>
+<li><strong>优先级</strong>：<code>slave-priority</code> 配置最高的（硬件配置好的）。</li>
+<li><strong>断线时间</strong>：与主节点断开连接时间最短的（数据较新）。</li>
+<li><strong>复制偏移量</strong>：<code>offset</code> 最大的（数据最全）。</li>
+</ol>
+<h3 id="4-故障转移"><a href="#4-故障转移" class="headerlink" title="4. 故障转移"></a>4. 故障转移</h3><p>选出新主节点后，其他从节点改连新主，旧主节点复活后降级为从节点。</p>
+<hr>
+<h2 id="四、-Redis-Cluster-集群：解决“海量数据与水平扩展”的问题"><a href="#四、-Redis-Cluster-集群：解决“海量数据与水平扩展”的问题" class="headerlink" title="四、 Redis Cluster 集群：解决“海量数据与水平扩展”的问题"></a>四、 Redis Cluster 集群：解决“海量数据与水平扩展”的问题</h2><p><strong>痛点</strong>：主从+哨兵，每个节点依然存全量数据，单机内存无法容纳海量数据。<br><strong>解决方案</strong>：数据分片（Sharding），分布式存储。</p>
+<h3 id="1-哈希槽（Hash-Slot）"><a href="#1-哈希槽（Hash-Slot）" class="headerlink" title="1. 哈希槽（Hash Slot）"></a>1. 哈希槽（Hash Slot）</h3><ul>
+<li>Redis 集群共有 <strong>16384 个槽位</strong>。</li>
+<li>数据路由：<code>CRC16(key) % 16384</code>，计算出数据属于哪个槽。</li>
+<li>槽位分配：每个主节点负责一部分槽位（如 3 个节点，每个管 5000+ 个槽）。</li>
+<li><strong>铁律</strong>：16384 个槽位必须全部分完，不能有空缺，否则集群下线。</li>
+</ul>
+<h3 id="2-底层数据结构"><a href="#2-底层数据结构" class="headerlink" title="2. 底层数据结构"></a>2. 底层数据结构</h3><ul>
+<li>每个节点内部维护一个 <code>slots[16384/8]</code> 的位图数组（16384 个比特位）。</li>
+<li>数组元素指向 <code>clusterNode</code> 结构体，记录该槽位归属哪个节点。</li>
+</ul>
+<h3 id="3-通信机制：Gossip-协议"><a href="#3-通信机制：Gossip-协议" class="headerlink" title="3. 通信机制：Gossip 协议"></a>3. 通信机制：Gossip 协议</h3><ul>
+<li>节点之间互相“八卦”，定期随机通信。</li>
+<li>同步集群状态（谁管哪些槽，谁死谁活），最终所有节点达成一致。</li>
+</ul>
+<h3 id="4-客户端访问：MOVED-重定向"><a href="#4-客户端访问：MOVED-重定向" class="headerlink" title="4. 客户端访问：MOVED 重定向"></a>4. 客户端访问：MOVED 重定向</h3><ul>
+<li>客户端算错槽，连错节点，节点返回 <code>MOVED</code> 错误，告诉客户端去连正确的节点。</li>
+<li>客户端会缓存“槽-节点”映射表，下次直接连对。</li>
+<li><strong>通俗解释</strong>：去银行 A 网点办业务，柜员说你的账户归 B 网点管，出门左转去 B。</li>
+</ul>
+<h3 id="5-高可用"><a href="#5-高可用" class="headerlink" title="5. 高可用"></a>5. 高可用</h3><ul>
+<li>集群内部依然有主从复制。</li>
+<li>主节点挂了，其他主节点投票，从该主节点的从节点中选一个晋升，接管其槽位。</li>
+</ul>
+<hr>
+<h2 id="五、-架构演进总结"><a href="#五、-架构演进总结" class="headerlink" title="五、 架构演进总结"></a>五、 架构演进总结</h2><table>
+<thead>
+<tr>
+<th align="left">阶段</th>
+<th align="left">核心技术</th>
+<th align="left">解决的问题</th>
+<th align="left">局限性</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>1. 单机</strong></td>
+<td align="left">RDB &#x2F; AOF</td>
+<td align="left">数据不丢（防断电）</td>
+<td align="left">内存有限，无法存海量数据；单点故障</td>
+</tr>
+<tr>
+<td align="left"><strong>2. 主从</strong></td>
+<td align="left">复制偏移量(offset)</td>
+<td align="left">读并发、数据备份</td>
+<td align="left">主节点挂掉需人工切换</td>
+</tr>
+<tr>
+<td align="left"><strong>3. 哨兵</strong></td>
+<td align="left">投票、客观下线</td>
+<td align="left">自动容灾（高可用）</td>
+<td align="left">每个节点存全量数据，内存受限</td>
+</tr>
+<tr>
+<td align="left"><strong>4. 集群</strong></td>
+<td align="left">哈希槽(16384)、Gossip</td>
+<td align="left">海量数据、水平扩展</td>
+<td align="left">架构复杂，客户端需支持重定向</td>
+</tr>
+</tbody></table>
+<p><strong>整体脉络</strong>：<br>为了<strong>不丢数据</strong>，搞了持久化；为了<strong>扛并发和备份</strong>，搞了主从；为了<strong>自动容灾</strong>，搞了哨兵；为了<strong>存海量数据</strong>，最终搞了集群。</p>
+</div>
+  <nav class="article-end" aria-label="继续阅读"><a href="/topics/">浏览学习专题 <span aria-hidden="true">↗</span></a><a href="#main-content">回到顶部 ↑</a></nav>
+</article>
+
+</div>
+</main>
+
+<footer class="footer linx-footer">
+  <span>记录学习的过程，也记录慢慢想明白的事。</span>
+  <span><a href="https://github.com/dubingjie" target="_blank" rel="noopener noreferrer">GitHub</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a><span aria-hidden="true"> · </span><a target="_blank" rel="noopener" href="https://github.com/wu3227834/hexo-theme-aerlume">Aerlume</a></span>
+</footer>
+
+
+<script src="/js/linx.js" defer data-root="/" data-search="/search.json"></script>
+
+<script src="/js/clipboard.js" defer></script>
+<script src="/js/lightbox.js" defer></script>
+
+</body>
+</html>
